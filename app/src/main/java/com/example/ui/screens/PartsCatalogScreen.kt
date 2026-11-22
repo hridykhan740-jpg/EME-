@@ -81,6 +81,7 @@ import com.example.model.SavedPart
 import com.example.model.UserVehicle
 import com.example.ui.components.ActiveVehicleBanner
 import com.example.ui.components.EpcCalloutBadge
+import com.example.ui.components.GooglePartImageButton
 import com.example.ui.components.PartVisualIdentifier
 import com.example.ui.components.StockStatusBadge
 import com.example.ui.components.inferSubPartVisualKind
@@ -342,6 +343,7 @@ fun PartsCatalogScreen(
           CatalogPartCard(
             calloutNumber = idx + 1,
             part = part,
+            vehicleLabel = vehicle?.let { "${it.brand} ${it.model}" } ?: "",
             isSaved = savedRecord != null,
             onCardClick = {
               if (searchQuery.isNotBlank()) {
@@ -443,6 +445,7 @@ private fun SystemHierarchyChip(
 private fun CatalogPartCard(
   calloutNumber: Int,
   part: CatalogPart,
+  vehicleLabel: String,
   isSaved: Boolean,
   onCardClick: () -> Unit,
   onToggleSave: () -> Unit,
@@ -519,14 +522,26 @@ private fun CatalogPartCard(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = Modifier.fillMaxWidth(),
       ) {
-        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-          Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+          ) {
             Text("Main OEM #", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(
-              text = part.oemNumber,
-              style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-              color = TelemetryCyan,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(
+                text = part.oemNumber,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = TelemetryCyan,
+              )
+              GooglePartImageButton(
+                oemNumber = part.oemNumber,
+                partName = part.name,
+                vehicleLabel = vehicleLabel,
+                modifier = Modifier.testTag("google_part_${part.id}"),
+              )
+            }
           }
           Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(part.aftermarketBrand, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -626,6 +641,12 @@ private fun CatalogPartCard(
                   color = TelemetryCyan,
                 )
               }
+              GooglePartImageButton(
+                oemNumber = sub.oemNumber,
+                partName = sub.name,
+                vehicleLabel = vehicleLabel,
+                modifier = Modifier.testTag("google_sub_${sub.id}"),
+              )
               IconButton(
                 onClick = { onAddSubPartToPdf(sub) },
                 modifier = Modifier.size(48.dp).testTag("card_add_sub_pdf_${sub.id}"),

@@ -88,7 +88,7 @@ class PartsAndMaintenanceEngineTest {
     val coveredSystems = axioParts.map { it.system }.toSet()
     assertEquals(CatalogSystem.entries.toSet(), coveredSystems)
     val totalPartsCount = axioParts.size + axioParts.sumOf { it.subComponents.size }
-    assertTrue("Expected 1000+ parts per vehicle, got $totalPartsCount", totalPartsCount >= 1000)
+    assertTrue("Expected 1500+ parts per vehicle, got $totalPartsCount", totalPartsCount >= 1500)
 
     val oilFilterAssembly = axioParts.first { it.id == "eng_oil_filter" }
     assertTrue(oilFilterAssembly.epcCatalogRef.contains("Toyota EPC"))
@@ -143,8 +143,25 @@ class PartsAndMaintenanceEngineTest {
     assertTrue(initialSchedule.all { it.intervalKm > 0 && it.intervalMonths > 0 })
 
     val oilBefore = initialSchedule.first { it.taskKey == "engine_oil_filter" }
-    assertEquals(8500, oilBefore.intervalKm)
-    assertEquals(12, oilBefore.intervalMonths)
+    assertEquals(5000, oilBefore.intervalKm)
+    assertEquals(6, oilBefore.intervalMonths)
+
+    val trnStaffCar = initialSchedule.first { it.taskKey == "transmission_fluid" }
+    assertEquals(10_000, trnStaffCar.intervalKm)
+    assertEquals(12, trnStaffCar.intervalMonths)
+
+    val pajeroSuv = sampleAxioBd.copy(
+      id = "veh_bd_pajero",
+      brand = "Mitsubishi",
+      model = "Pajero",
+    )
+    val suvSchedule = PredictiveMaintenanceEngine.computeSchedule(
+      vehicle = pajeroSuv,
+      logs = emptyList(),
+      catalogParts = parts,
+    )
+    val trnSuv = suvSchedule.first { it.taskKey == "transmission_fluid" }
+    assertEquals(14_000, trnSuv.intervalKm)
 
     val logs = listOf(
       MaintenanceLog(

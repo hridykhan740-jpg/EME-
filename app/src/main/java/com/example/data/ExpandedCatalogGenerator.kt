@@ -27,16 +27,24 @@ internal object ExpandedCatalogGenerator {
   private val fastenerSuffixes: List<Triple<String, String, Double>> = listOf(
     Triple("M8×25 Flange Mounting Bolt Kit (4x)", "Grade 10.9 Zinc-Nickel Hex Flange", 3.40),
     Triple("M10×30 High-Tensile Stud & Lock Nut Set", "DIN 939 Dacromet Anti-Seize", 4.80),
-    Triple("Precision Alignment Dowel Pin Pair (10mm)", "Hardened Ground Steel Pin", 2.90),
-    Triple("Viton Elastomer Primary Lip Seal / O-Ring", "220°C Chemical-Resistant Viton", 3.60),
-    Triple("Single-Use Aluminum Crush Washer Set (4x)", "Annealed Seal Washer 12–18mm", 1.80),
-    Triple("Anti-Vibration Rubber Isolation Bushing Pair", "Shore 65A EPDM Damper", 5.20),
-    Triple("Stainless Steel Retaining Circlip & Snap Ring", "Corrosion-Proof Spring Steel", 2.40),
+    Triple("Precision Alignment Dowel Pin Pair (10×16mm)", "Hardened Ground Steel Dowel Pin", 2.90),
+    Triple("Viton Elastomer Primary Lip Oil Seal / O-Ring", "220°C Chemical-Resistant Viton", 3.60),
+    Triple("Annealed Copper & Aluminum Crush Washer Set (4x)", "Single-Use 12–18mm Seal Washer", 1.80),
+    Triple("EPDM Anti-Vibration Isolation Grommet & Bush Pair", "Shore 65A Rubber Damper Bush", 5.20),
+    Triple("DIN 471/472 Stainless Retaining Circlip & Snap Ring", "Corrosion-Proof Spring Steel", 2.40),
     Triple("Die-Cast Aluminum Support Bracket / Stay", "CAD-Verified OEM Geometry", 14.50),
-    Triple("Wire Harness Clip & Conduit Grommet Kit", "UV-Stabilized PA66 Nylon", 3.10),
-    Triple("Protective Dust Boot / Heat Shield Sleeve", "Silicone-Glass Thermal Barrier", 6.90),
-    Triple("Calibration Shim & Clearance Spacer Kit", "Precision Stamped Steel 0.5mm", 4.20),
-    Triple("Factory Torque-to-Yield Collar Sleeve", "OEM Compression Bushing", 5.40),
+    Triple("Waterproof Wire Harness Clip & Conduit Grommet Kit", "UV-Stabilized PA66 Nylon", 3.10),
+    Triple("Silicone-Fiberglass Heat Shield Sleeve & Dust Boot", "Thermal Barrier Sleeve", 6.90),
+    Triple("Precision Calibration Shim & 0.5mm Clearance Spacer", "Precision Stamped Steel Shim", 4.20),
+    Triple("Torque-to-Yield Compression Collar & Crush Sleeve", "OEM Preload Compression Sleeve", 5.40),
+    Triple("M6×12 Oil Gallery Threaded Plug & PTFE Seal Ring", "Hex Socket Pressure Plug", 2.60),
+    Triple("Nyloc Self-Locking Castle Nut & Split Cotter Pin", "DIN 935 Safety Castle Nut", 3.20),
+    Triple("Hardened Woodruff Key & Spline Indexing Lock Key", "CNC Tempered Alloy Key", 2.80),
+    Triple("304 Stainless Worm-Drive & Constant-Tension Clamp Set", "Marine-Grade Band Clamp (4x)", 4.50),
+    Triple("Brass M8 Speed-Bleeder Nipple & Rubber Dust Cap", "One-Way Brass Bleeder Valve", 4.90),
+    Triple("Needle Thrust Washer & Axial Bearing Preload Shim", "Hardened Thrust Bearing Race", 5.60),
+    Triple("PTFE Back-Up Ring & High-Pressure Banjo Union Bolt", "High-Pressure Union Fitting", 6.20),
+    Triple("Zinc-Dichromate Spring U-Nut & Panel Retainer (6x)", "Vibration-Proof Speed Clip", 2.75),
   )
 
   private val extraModules: List<EpcModuleTemplate> = listOf(
@@ -1100,9 +1108,9 @@ internal object ExpandedCatalogGenerator {
     val p = spec.codePrefix
     val combined = ArrayList<CatalogPart>(baseParts.size + extraModules.size)
 
-    // 1. Keep every original assembly and pad sub-components up to 15 micro items
+    // 1. Keep every original assembly and pad sub-components up to 22 micro items
     baseParts.forEach { base ->
-      val enrichedSubs = padSubComponents(base.id, base.oemNumber, p, base.subComponents, targetCount = 15)
+      val enrichedSubs = padSubComponents(base.id, base.oemNumber, p, base.subComponents, targetCount = 22)
       combined += base.copy(subComponents = enrichedSubs)
     }
 
@@ -1122,7 +1130,7 @@ internal object ExpandedCatalogGenerator {
           priceUsd = price,
         )
       }
-      val paddedSubs = padSubComponents(tpl.id, "$p-${tpl.oemTail}", p, coreSubs, targetCount = 15)
+      val paddedSubs = padSubComponents(tpl.id, "$p-${tpl.oemTail}", p, coreSubs, targetCount = 22)
       combined += CatalogPart(
         id = tpl.id,
         system = tpl.system,

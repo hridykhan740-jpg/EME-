@@ -268,7 +268,15 @@ const HARDWARE_SUFFIXES = [
   ['Wire Harness Clip & Conduit Grommet Kit', 'sensor', 'UV-Stabilized PA66 Nylon', 3.10],
   ['Protective Dust Boot & Thermal Barrier Sleeve', 'hose', 'Silicone-Glass Heat Shield', 6.90],
   ['Calibration Shim & Clearance Spacer Kit', 'seal', 'Precision Stamped Steel 0.5mm', 4.20],
-  ['Factory Torque-to-Yield Compression Collar', 'bearing', 'OEM Precision Compression Sleeve', 5.40]
+  ['Factory Torque-to-Yield Compression Collar', 'bearing', 'OEM Precision Compression Sleeve', 5.40],
+  ['M12×1.25 Magnetic Drain & Gallery Plug', 'bolt', 'Neodymium Trap Plug + Washer', 4.60],
+  ['Slotted Castle Nut & Stainless Cotter Pin', 'bolt', 'Safety-Wired Axle/Pivot Fastener', 3.20],
+  ['Hardened Woodruff Key & Index Step Pin', 'bolt', 'Alloy Tool-Steel Shaft Lock Key', 2.75],
+  ['304 Stainless Constant-Tension Clamp Set (4x)', 'hose', 'Worm-Drive / Spring Band Clamps', 3.90],
+  ['M8×1.25 Brass Speed-Bleeder Nipple & Cap', 'bolt', 'Check-Ball One-Man Bleed Valve', 4.50],
+  ['Needle Thrust Washer & Preload Shim Ring', 'bearing', 'Hardened 0.8mm Thrust Bearing', 5.10],
+  ['PTFE Back-Up Ring & 10mm Banjo Union Bolt', 'seal', 'High-Pressure Hydraulic Split Ring', 4.10],
+  ['Zinc-Dichromate U-Nut Speed Clip Retainer (6x)', 'bracket', 'Self-Locking Fender/Frame Clip', 2.60]
 ];
 
 const EXTRA_SYSTEM_TEMPLATES = [
@@ -645,7 +653,7 @@ function buildFullCatalog(v, variantIdx) {
     ]}
   ];
 
-  // Expand each system with additional assemblies and pad every assembly to 15 sub-parts -> 72 assemblies + 1,080 sub-parts = 1,152 parts!
+  // Expand each system with additional assemblies and pad every assembly to 22 sub-parts -> 72 assemblies + 1,584 sub-parts = 1,656 parts!
   const allAssemblies = [...core];
   EXTRA_SYSTEM_TEMPLATES.forEach(([id, sys, name, oemTail, alt, fig, price, icon, subArr]) => {
     allAssemblies.push({
@@ -662,12 +670,12 @@ function buildFullCatalog(v, variantIdx) {
     });
   });
 
-  // Pad every assembly to 15 numbered sub-parts and build flat 1,152+ part index
+  // Pad every assembly to 22 numbered micro sub-parts and build flat 1,656-part index
   const flatParts = [];
   allAssemblies.forEach((asm, asmIdx) => {
     const baseTail = asm.oem.replace(/[^A-Z0-9]/gi, '').slice(-5) || '10001';
     let hwIdx = 0;
-    while (asm.subs.length < 15) {
+    while (asm.subs.length < 22) {
       const [hwName, hwIcon, hwSpec, hwPrice] = HARDWARE_SUFFIXES[hwIdx % HARDWARE_SUFFIXES.length];
       const seq = asm.subs.length + 1;
       asm.subs.push({

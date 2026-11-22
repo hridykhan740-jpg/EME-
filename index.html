@@ -224,6 +224,27 @@
       display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
       gap: 10px; margin-top: 12px;
     }
+    .oem-row {
+      display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .g-search-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #ffffff; border: 1px solid #cbd5e1;
+      text-decoration: none; flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      transition: transform 0.14s, box-shadow 0.14s;
+    }
+    .g-search-btn:hover { transform: scale(1.12); box-shadow: 0 2px 6px rgba(34, 211, 238, 0.45); }
+    .bao-chart-wrap { overflow-x: auto; margin-top: 10px; }
+    .bao-table {
+      width: 100%; border-collapse: collapse; font-size: 0.74rem; min-width: 720px;
+    }
+    .bao-table th, .bao-table td {
+      border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top;
+    }
+    .bao-table th { background: var(--surface-2); color: var(--cyan); font-weight: 700; }
+    .bao-notes { margin-top: 10px; font-size: 0.76rem; color: var(--muted); line-height: 1.55; }
     @media print {
       header, .no-print { display: none !important; }
       body { background: #fff; color: #000; }
@@ -306,13 +327,13 @@
       <div class="card no-print">
         <div class="row" style="gap: 8px;">
           <div style="flex:1; min-width:220px;">
-            <input id="part-search" type="search" placeholder="Instant search 1,152 parts, OEM # or assembly (e.g. O-ring, 90915, V94, piston, rotor, ball joint)…" oninput="onPartSearch(this.value)" />
+            <input id="part-search" type="search" placeholder="Instant search 1,656 parts, OEM # or assembly (e.g. O-ring, 90915, V94, bleeder, rotor, ball joint)…" oninput="onPartSearch(this.value)" />
           </div>
           <div class="epc-mode-bar">
             <button id="mode-assemblies" class="epc-mode-btn active" onclick="setViewMode('assemblies')">72 Assemblies</button>
-            <button id="mode-all" class="epc-mode-btn" onclick="setViewMode('all')">All 1,152 Parts Chart</button>
+            <button id="mode-all" class="epc-mode-btn" onclick="setViewMode('all')">All 1,656 Parts Chart</button>
           </div>
-          <span class="muted" id="parts-counter">1,152 parts</span>
+          <span class="muted" id="parts-counter">1,656 parts</span>
         </div>
         <div class="chips" id="system-chips" style="margin-top:8px;"></div>
       </div>
@@ -326,12 +347,13 @@
       <div class="card">
         <div class="row">
           <div>
-            <strong>Predictive Maintenance Hub</strong>
-            <div class="muted">Calibrated for Bangladesh / Asian traffic, dust &amp; monsoon conditions (km + months)</div>
+            <strong>Predictive Maintenance Hub • BAO 35/88 (সংশোধনী ০৭/০৪)</strong>
+            <div class="muted" id="bao-vehicle-summary">১৬১ ফিল্ড ওয়ার্কশপ কোং • যানবাহনের শ্রেণি অনুযায়ী তেল, ফিল্টার, কুল্যান্ট ও টায়ার বদলের চার্ট</div>
           </div>
           <span class="pill" id="health-pill">Health 100%</span>
         </div>
       </div>
+      <div id="bao-ref-slot"></div>
       <div id="schedule-list" class="grid"></div>
     </section>
 
@@ -417,20 +439,68 @@
       return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
 
-    const INTERVALS = [
-      { key:'oil', title:'Engine Oil & Filter Assembly', km:8500, mo:12, partId:'eng_oil' },
-      { key:'ac', title:'Cabin PM2.5 HEPA Air Filter', km:12500, mo:12, partId:'hvc_kit' },
-      { key:'air', title:'Engine Air & Fuel Filter Service', km:17000, mo:24, partId:'ful_air' },
-      { key:'wip', title:'Silicone Wiper Blades', km:20000, mo:12, partId:'bdy_kit' },
-      { key:'brk', title:'Brake Pads, Rotors & DOT 4 Fluid', km:30000, mo:24, partId:'brk_kit' },
-      { key:'bat', title:'12V Battery & ABS Sensor Check', km:50000, mo:36, partId:'elc_kit' },
-      { key:'trn', title:'Transmission / eCVT Fluid & Strainer', km:60000, mo:48, partId:'trn_kit' },
-      { key:'spark', title:'Iridium Spark / Glow Plugs', km:60000, mo:48, partId:'eng_spark' },
-      { key:'sus', title:'Suspension Strut & Control Arm Audit', km:65000, mo:48, partId:'sus_kit' },
-      { key:'str', title:'Steering Rack & Tie-Rod Audit', km:70000, mo:48, partId:'str_kit' },
-      { key:'clt', title:'Clutch Disc & Release Bearing', km:75000, mo:60, partId:'clt_kit' },
-      { key:'col', title:'Radiator, Thermostat & Coolant Flush', km:80000, mo:60, partId:'col_kit' }
+    function googleImgBtn(oem, name, vehLabel) {
+      const q = encodeURIComponent([oem, vehLabel || '', name || ''].filter(Boolean).join(' '));
+      const url = `https://www.google.com/search?tbm=isch&q=${q}`;
+      return `<a class="g-search-btn no-print" href="${url}" target="_blank" rel="noopener noreferrer" title="Google-এ ছবি দেখুন: ${esc(oem)} (${esc(name || '')})" aria-label="Google Image Search ${esc(oem)}">` +
+        `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">` +
+        `<path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>` +
+        `<path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>` +
+        `<path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>` +
+        `<path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>` +
+        `</svg></a>`;
+    }
+
+    function classifyVehicleBao(v) {
+      const m = `${v.brand} ${v.model}`.toLowerCase();
+      if (v.cat === 'TRUCK_BUS') {
+        if (/tata ace|intra|bolero|jeeto|xenon|dost|hilux|l200|d-max|dyna/.test(m)) {
+          return { key:'pickup', label:'৩/৪ ও ১/১-১/২ টন পিকআপ', psOil:'০.৪৫ লিঃ', trnKm:14000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:true };
+        }
+        if (/lpt|prima|ecomet|viking|rm2|ak1j|pro 2049|500 series/.test(m)) {
+          return { key:'heavy', label:'৫ টন ও তদূর্ধ্ব ট্রাক/বাস', psOil:'০.৬০ লিঃ', trnKm:38000, trnMo:18, oilPaperKm:10000, oilPaperMo:6, feltCleanKm:10000, feltRepKm:19000, feltRepMo:12, timingNote:false };
+        }
+        return { key:'med', label:'২-১/২ ও ৩-১/২ টন ট্রাক', psOil:'০.৬০ লিঃ', trnKm:29000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:false };
+      }
+      if (v.cat === 'MPV') {
+        return { key:'pickup', label:'পিকআপ / এমপিভি (৩/৪–১.৫ টন)', psOil:'০.৪৫ লিঃ', trnKm:14000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:true };
+      }
+      if (v.cat === 'SUV') {
+        return { key:'jeep', label:'১/৪ টন জীপ / ৪x৪ এসইউভি', psOil:'০.৪০ লিঃ', trnKm:14000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:true };
+      }
+      return { key:'staff', label:'সকল প্রকার স্টাফকার / সেডান', psOil:'০.২৫ লিঃ', trnKm:10000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:false };
+    }
+
+    const BAO_CHART_ROWS = [
+      ['১.', 'সকল প্রকার মোটর সাইকেল', '৮০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি. / ০৬ মাস', '৮০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি. / ০৬ মাস', '৩,২০০ কি.মি. / ০৩ মাস', '৩,২০০ কি.মি.', '৬,০০০ কি.মি. / ০৬ মাস', '—', '—', '—'],
+      ['২.', 'সকল প্রকার স্টাফকার', '৮০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি. / ০৬ মাস', '৮০০ কি.মি. / ০৩ মাস', '১০,০০০ কি.মি. / ১২ মাস', '৫,০০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি.', '১০,০০০ কি.মি. / ০৬ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '২৯,০০০ কি.মি. / ১৮ মাস'],
+      ['৩.', 'সকল প্রকার ট্রাক ১/৪ টন (জীপ)', '৮০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি. / ০৬ মাস', '৮০০ কি.মি. / ০৩ মাস', '১৪,০০০ কি.মি. / ১২ মাস', '৫,০০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি.', '১০,০০০ কি.মি. / ০৬ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '২৯,০০০ কি.মি. / ১৮ মাস'],
+      ['৪.', 'ট্রাক ৩/৪ ও ১-১/২ টন (পিকআপ)', '৮০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি. / ০৬ মাস', '৮০০ কি.মি. / ০৩ মাস', '১৪,০০০ কি.মি. / ১২ মাস', '৫,০০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি.', '১০,০০০ কি.মি. / ০৬ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '২৯,০০০ কি.মি. / ১৮ মাস'],
+      ['৫.', 'ট্রাক ২-১/২ ও ৩-১/২ টন', '৮০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি. / ০৬ মাস', '৮০০ কি.মি. / ০৩ মাস', '২৯,০০০ কি.মি. / ১২ মাস', '৫,০০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি.', '১০,০০০ কি.মি. / ০৬ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '২৯,০০০ কি.মি. / ১৮ মাস'],
+      ['৬.', 'ট্রাক ৫ টন এবং উহার উপরে', '৮০০ কি.মি. / ০৩ মাস', '৫,০০০ কি.মি. / ০৬ মাস', '৮০০ কি.মি. / ০৩ মাস', '৩৮,০০০ কি.মি. / ১৮ মাস', '১০,০০০ কি.মি. / ০৬ মাস', '১০,০০০ কি.মি.', '১৯,০০০ কি.মি. / ১২ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '১৯,০০০ কি.মি. / ১২ মাস', '২৯,০০০ কি.মি. / ১৮ মাস'],
+      ['৭.', 'সকল প্রকার ট্যাংক', '৩০ ঘণ্টা', '১২০ কি.মি. / ১৮ মাস', '৪০০ কি.মি. / ৩০ মাস', '৪০০ কি.মি. / ৩০ মাস', '১০০ ঘণ্টা', '১০০ ঘণ্টা', '২০০ ঘণ্টা', '১০০ ঘণ্টা', '—', '—']
     ];
+    state.showBaoChart = false;
+
+    function buildIntervalsForVehicle(v) {
+      const b = classifyVehicleBao(v);
+      return [
+        { key:'oil', title:'Engine Oil Change (প্রাথমিক ৮০০ কি.মি./৩ মাস • পরবর্তী ৫,০০০ কি.মি./৬ মাস)', km:5000, mo:6, partId:'eng_oil', extra:'প্রাথমিক: ৮০০ কি.মি. বা ৩ মাস' },
+        { key:'oil_paper', title:'Oil Filter Paper Cartridge (কাগজের কার্তুজ তেলের ফিল্টার)', km:b.oilPaperKm, mo:b.oilPaperMo, partId:'eng_oil', extra:b.label },
+        { key:'oil_felt', title:'Oil Filter Felt & Gauze Type (পরিষ্কার ও পরিবর্তন)', km:b.feltRepKm, mo:b.feltRepMo, partId:'eng_oil', extra:`পরিষ্কার প্রতি ${b.feltCleanKm.toLocaleString()} কি.মি.` },
+        { key:'trn', title:`Transmission & Differential Oil (${b.label})`, km:b.trnKm, mo:b.trnMo, partId:'trn_kit', extra:'প্রাথমিক পরিবর্তন: ৮০০ কি.মি. বা ৩ মাস' },
+        { key:'fuel_pri', title:'Primary Fuel Filter — Paper Cartridge (প্রাইমারি ফুয়েল ফিল্টার)', km:5000, mo:6, partId:'ful_air', extra:'BAO ৩৫/৮৮ সংশোধনী' },
+        { key:'fuel_sec', title:'Secondary Fuel Filter — Steel / Metal (সেকেন্ডারি ফুয়েল ফিল্টার)', km:10000, mo:12, partId:'ful_air', extra:'১০,০০০ কি.মি. বা ১২ মাস' },
+        { key:'fuel_main', title:'Main Fuel Filter Element (মূল ফুয়েল ফিল্টার এলিমেন্ট)', km:19000, mo:12, partId:'ful_air', extra:'১৯,০০০ কি.মি. বা ১২ মাস' },
+        { key:'air_paper', title:'Air Cleaner Element — Paper Cartridge (এয়ার ক্লিনার কার্তুজ)', km:19000, mo:12, partId:'ful_air', extra:'১৯,০০০ কি.মি. বা ১২ মাস' },
+        { key:'air_sponge', title:'Air Cleaner Element — Sponge / Other (স্পঞ্জ ও অন্যান্য)', km:29000, mo:18, partId:'ful_air', extra:'২৯,০০০ কি.মি. বা ১৮ মাস' },
+        { key:'ps_topup', title:`Power Steering Oil Top-Up — মাসিক (BWI 23/02: ${b.psOil})`, km:2000, mo:1, partId:'str_kit', extra:`টপ-আপ পরিমাণ: ${b.psOil}` },
+        { key:'tyre', title:'Tyre / Outer Cover Change (সকল প্রকার গাড়ির টায়ার আউটার)', km:40000, mo:36, partId:'sus_hub', extra:'মোটরসাইকেল: সামনে ৩২,০০০ / পিছনে ২৪,০০০ কি.মি.' },
+        { key:'col', title:'Antifreeze / Coolant Change (BAO 273/04 মোতাবেক ৩ বছর)', km:60000, mo:36, partId:'col_kit', extra:'ম্যানুয়াল অনুযায়ী প্রতি ৩৬ মাস' },
+        { key:'timing', title:'Timing Belt Replacement (সকল জীপ ও পিকআপ: ১,৫০,০০০ কি.মি.)', km:150000, mo:72, partId:'eng_timing', extra:'১,৫০,০০০ কি.মি. বা ৯০,০০০ মাইল' },
+        { key:'brk', title:'Brake Pads, Rotors & DOT 4 Fluid Inspection', km:20000, mo:12, partId:'brk_kit', extra:'ব্রেক প্যাড ও ফ্লুইড চেক' }
+      ];
+    }
 
     function activeVehicle() { return VEHICLES[state.vehicleIdx] || VEHICLES[0]; }
     function activeVariant(v) {
@@ -613,8 +683,11 @@
               </div>
             </div>
             <div class="row" style="margin-top:auto; padding-top:4px; border-top:1px solid rgba(51,65,85,0.6);">
-              <div>
-                <div class="oem-code">${esc(item.oem)}</div>
+              <div style="min-width:0; flex:1;">
+                <div class="oem-row">
+                  <span class="oem-code">${esc(item.oem)}</span>
+                  ${googleImgBtn(item.oem, item.name, `${v.brand} ${v.model}`)}
+                </div>
                 <div class="muted" style="font-size:0.74rem;">$${item.price.toFixed(2)}</div>
               </div>
               <button class="btn-outline" style="padding:5px 10px; font-size:0.76rem;" onclick="addPdf('${esc(item.asmId)}', ${item.subId ? `'${esc(item.subId)}'` : 'null'})">+ PDF</button>
@@ -650,7 +723,10 @@
               <div class="epc-thumb">${partSvg(p.icon)}</div>
               <div style="flex:1; min-width:0;">
                 <div style="font-weight:700; font-size:0.96rem; margin-bottom:4px;">${esc(p.name)}</div>
-                <div class="oem-code">Main OEM: ${esc(p.oem)}</div>
+                <div class="oem-row">
+                  <span class="oem-code">Main OEM: ${esc(p.oem)}</span>
+                  ${googleImgBtn(p.oem, p.name, `${v.brand} ${v.model}`)}
+                </div>
                 <div class="muted" style="margin-top:2px;">Alt: ${esc(p.alt)} • <strong>$${p.price.toFixed(2)}</strong></div>
               </div>
             </div>
@@ -670,7 +746,11 @@
                           <span class="epc-num" style="min-width:20px; height:20px; font-size:0.68rem;">${sIdx + 1}</span>
                           <span style="font-size:0.8rem; font-weight:700; line-height:1.2;">${esc(s.name)}</span>
                         </div>
-                        <div class="oem-code" style="font-size:0.75rem; margin-top:2px;">${esc(s.oem)} • $${s.price.toFixed(2)}</div>
+                        <div class="oem-row" style="margin-top:3px;">
+                          <span class="oem-code" style="font-size:0.74rem;">${esc(s.oem)}</span>
+                          ${googleImgBtn(s.oem, s.name, `${v.brand} ${v.model}`)}
+                          <span class="muted" style="font-size:0.72rem;">$${s.price.toFixed(2)}</span>
+                        </div>
                         <div class="muted" style="font-size:0.72rem;">${esc(s.spec)} (${esc(s.qty)})</div>
                       </div>
                       <button class="btn-outline" style="padding:4px 8px; font-size:0.72rem;" onclick="addPdf('${esc(p.id)}','${esc(s.id)}')">+ PDF</button>
@@ -697,12 +777,65 @@
     }
     function toggleExpand(id) { state.expanded[id] = !state.expanded[id]; renderParts(); }
 
+    function toggleBaoChart() {
+      state.showBaoChart = !state.showBaoChart;
+      renderSchedule();
+    }
+
     function renderSchedule() {
       const v = activeVehicle();
+      const b = classifyVehicleBao(v);
       const vehKey = `${v.brand}|${v.model}`;
       const vehLogs = state.logs[vehKey] || {};
+      const intervals = buildIntervalsForVehicle(v);
+
+      const summaryEl = document.getElementById('bao-vehicle-summary');
+      if (summaryEl) {
+        summaryEl.textContent = `শ্রেণি: ${b.label} • পাওয়ার স্টিয়ারিং টপ-আপ: ${b.psOil} (BWI 23/02) • অ্যান্টিফ্রিজ: ৩৬ মাস (BAO 273/04)`;
+      }
+
+      const refSlot = document.getElementById('bao-ref-slot');
+      if (refSlot) {
+        refSlot.innerHTML = `
+          <div class="card">
+            <div class="row">
+              <div>
+                <strong style="color:var(--cyan);">১৬১ ফিল্ড ওয়ার্কশপ কোং • BAO 35/88 (সংশোধনী ০৭/০৪) অফিসিয়াল চার্ট</strong>
+                <div class="muted">ইঞ্জিন অয়েল, ট্রান্সমিশন/ডিফারেন্সিয়াল, তেল ফিল্টার (কাগজ ও ফেল্ট), ফুয়েল ফিল্টার, এয়ার ক্লিনার ও বিশেষ নোট</div>
+              </div>
+              <button class="btn-outline no-print" onclick="toggleBaoChart()">${state.showBaoChart ? 'চার্ট বন্ধ করুন ▲' : 'সম্পূর্ণ চার্ট দেখুন ▼'}</button>
+            </div>
+            ${state.showBaoChart ? `
+              <div class="bao-chart-wrap">
+                <table class="bao-table">
+                  <thead>
+                    <tr>
+                      <th>ক্রঃ</th><th>যানবাহনের প্রকার</th>
+                      <th>ইঞ্জিন তেল (প্রাথমিক)</th><th>ইঞ্জিন তেল (পরবর্তী)</th>
+                      <th>ট্রান্স/ডিফা (প্রাথমিক)</th><th>ট্রান্স/ডিফা (পরবর্তী)</th>
+                      <th>তেল ফিল্টার (কাগজ)</th><th>ফেল্ট (পরিষ্কার)</th><th>ফেল্ট (পরিবর্তন)</th>
+                      <th>ফুয়েল ফিল্টার</th><th>এয়ার (কাগজ)</th><th>এয়ার (স্পঞ্জ)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${BAO_CHART_ROWS.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="bao-notes">
+                • বিএও ২৭৩/০৪ মোতাবেক এন্টিকোর/কুল্যান্ট ৩ বছর (৩৬ মাস) পর ম্যানুয়াল মোতাবেক পরিবর্তন করতে হবে।<br/>
+                • বিডব্লিউআই ২২/০২ ও ২৩/০২ মোতাবেক মাসিক পাওয়ার স্টিয়ারিং অয়েল টপ-আপ: স্টাফকার ০.২৫ লিঃ, জীপ ০.৪০ লিঃ, পিকআপ ০.৪৫ লিঃ, ৩-৫ টন ০.৬০ লিঃ।<br/>
+                • সকল প্রকার গাড়ির কভার আউটার (টায়ার) ৪০,০০০ কি.মি. পর বদলী; মোটরসাইকেল সামনে ৩২,০০০ কি.মি. ও পিছনে ২৪,০০০ কি.মি.।<br/>
+                • প্রাইমারী কাগজের কার্তুজ ফুয়েল ফিল্টার ৫,০০০ কি.মি. বা ৬ মাস এবং সেকেন্ডারী স্টিল ফুয়েল ফিল্টার ১০,০০০ কি.মি. বা ১২ মাস পর বদলী করতে হবে।<br/>
+                • টাইমিং বেল্ট ১,৫০,০০০ কি.মি. অথবা ৯০,০০০ মাইল পর পরিবর্তন করতে হবে (সকল জীপ ও পিকআপ)।
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
       let overdue = 0;
-      const html = INTERVALS.map(t => {
+      const html = intervals.map(t => {
         const lastKm = vehLogs[t.key] ?? (state.odo > t.km ? Math.floor((state.odo - 1) / t.km) * t.km : 0);
         const nextDue = lastKm + t.km;
         const rem = nextDue - state.odo;
@@ -713,10 +846,11 @@
         return `
           <div class="card">
             <div class="row">
-              <strong>${t.title}</strong>
-              <span class="pill ${badge}">${status}</span>
+              <strong>${esc(t.title)}</strong>
+              <span class="pill ${badge}">${esc(status)}</span>
             </div>
             <div class="muted" style="margin-top:4px;">Every ${t.km.toLocaleString()} km / ${t.mo} months • Next due: ${nextDue.toLocaleString()} km</div>
+            ${t.extra ? `<div class="muted" style="color:var(--cyan); font-size:0.75rem; margin-top:2px;">${esc(t.extra)}</div>` : ''}
             <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${color};"></div></div>
             <div class="row" style="margin-top:8px;">
               <button class="btn-outline" onclick="logService('${t.key}')">Log Done @ ${state.odo.toLocaleString()} km</button>
@@ -726,7 +860,7 @@
         `;
       }).join('');
       document.getElementById('schedule-list').innerHTML = html;
-      const health = Math.max(25, 100 - overdue * 14);
+      const health = Math.max(25, 100 - overdue * 12);
       document.getElementById('health-pill').textContent = `Health ${health}%`;
     }
 
@@ -789,7 +923,10 @@
           <div>
             <span class="pill ${i.type==='SUB-PART'?'':'pill-orange'}">${esc(i.type)} • ${esc(i.sys)}</span>
             <div style="font-weight:700; margin-top:4px;">${idx+1}. ${esc(i.name)}</div>
-            <div class="oem-code">OEM: ${esc(i.oem)} • $${i.price.toFixed(2)}</div>
+            <div class="oem-row" style="margin-top:2px;">
+              <span class="oem-code">OEM: ${esc(i.oem)} • $${i.price.toFixed(2)}</span>
+              ${googleImgBtn(i.oem, i.name, i.veh)}
+            </div>
             <div class="muted">${esc(i.veh)}</div>
           </div>
           <button class="btn-outline no-print" onclick="removePdf('${esc(i.key)}')">Remove</button>

@@ -55,6 +55,7 @@ import com.example.model.CatalogPart
 import com.example.model.PartSubComponent
 import com.example.model.UserVehicle
 import com.example.ui.components.EpcCalloutBadge
+import com.example.ui.components.GooglePartImageButton
 import com.example.ui.components.PartVisualIdentifier
 import com.example.ui.components.StockStatusBadge
 import com.example.ui.components.inferSubPartVisualKind
@@ -123,7 +124,21 @@ fun PartDetailModalSheet(
 
       HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-      DetailInfoBlock(label = "OEM Part Number (${part.oemManufacturer})", value = part.oemNumber, accent = TelemetryCyan)
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Box(modifier = Modifier.weight(1f)) {
+          DetailInfoBlock(label = "OEM Part Number (${part.oemManufacturer})", value = part.oemNumber, accent = TelemetryCyan)
+        }
+        GooglePartImageButton(
+          oemNumber = part.oemNumber,
+          partName = part.name,
+          vehicleLabel = vehicle?.let { "${it.brand} ${it.model}" } ?: "",
+          modifier = Modifier.testTag("detail_google_main_oem"),
+        )
+      }
       DetailInfoBlock(label = "Official EPC Catalog Reference", value = part.epcCatalogRef, accent = RacingOrange, leadingIcon = Icons.Rounded.Description)
       DetailInfoBlock(label = "Verified Aftermarket (${part.aftermarketBrand})", value = part.aftermarketNumber)
       DetailInfoBlock(label = "Technical Specification", value = part.specSummary)
@@ -193,7 +208,13 @@ fun PartDetailModalSheet(
                       color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                   }
-                  Spacer(Modifier.width(8.dp))
+                  Spacer(Modifier.width(4.dp))
+                  GooglePartImageButton(
+                    oemNumber = sub.oemNumber,
+                    partName = sub.name,
+                    vehicleLabel = vehicle?.let { "${it.brand} ${it.model}" } ?: "",
+                    modifier = Modifier.testTag("detail_google_sub_${sub.id}"),
+                  )
                   OutlinedButton(
                     onClick = { onAddSubPartToPdf(sub) },
                     shape = RoundedCornerShape(8.dp),

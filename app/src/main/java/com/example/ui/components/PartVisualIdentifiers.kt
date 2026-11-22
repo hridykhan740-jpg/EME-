@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +28,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -69,12 +76,12 @@ fun inferSubPartVisualKind(name: String, fallback: PartVisualKind): PartVisualKi
   return when {
     n.contains("filter") || n.contains("strainer") || n.contains("cartridge") || n.contains("element") || n.contains("drier") -> PartVisualKind.FILTER_CANISTER
     n.contains("o-ring") || n.contains("seal") || n.contains("gasket") || n.contains("washer") || n.contains("shim") || n.contains("circlip") || n.contains("snap ring") || n.contains("collar") -> PartVisualKind.BRAKE_ROTOR
-    n.contains("bolt") || n.contains("nut") || n.contains("stud") || n.contains("pin") || n.contains("plug") || n.contains("injector") || n.contains("coil") -> PartVisualKind.SPARK_IGNITION
+    n.contains("bolt") || n.contains("nut") || n.contains("stud") || n.contains("pin") || n.contains("plug") || n.contains("injector") || n.contains("coil") || n.contains("nipple") || n.contains("key") -> PartVisualKind.SPARK_IGNITION
     n.contains("spring") || n.contains("strut") || n.contains("shock") || n.contains("damper") -> PartVisualKind.STRUT_COIL
-    n.contains("bracket") || n.contains("arm") || n.contains("mount") || n.contains("bushing") || n.contains("fork") || n.contains("ball joint") -> PartVisualKind.CONTROL_ARM
+    n.contains("bracket") || n.contains("arm") || n.contains("mount") || n.contains("bushing") || n.contains("bush") || n.contains("fork") || n.contains("ball joint") || n.contains("grommet") -> PartVisualKind.CONTROL_ARM
     n.contains("bearing") || n.contains("gear") || n.contains("sprocket") || n.contains("flywheel") || n.contains("pulley") -> PartVisualKind.TRANSMISSION_GEAR
     n.contains("sensor") || n.contains("switch") || n.contains("relay") || n.contains("solenoid") || n.contains("valve") || n.contains("regulator") || n.contains("servo") -> PartVisualKind.SENSOR_ELECTRONIC
-    n.contains("hose") || n.contains("pipe") || n.contains("tube") || n.contains("muffler") || n.contains("resonator") -> PartVisualKind.EXHAUST_PIPE
+    n.contains("hose") || n.contains("pipe") || n.contains("tube") || n.contains("muffler") || n.contains("resonator") || n.contains("clamp") || n.contains("sleeve") -> PartVisualKind.EXHAUST_PIPE
     n.contains("cable") || n.contains("rack") || n.contains("shaft") || n.contains("rod") -> PartVisualKind.STEERING_RACK
     n.contains("belt") || n.contains("chain") -> PartVisualKind.BELT_TIMING
     n.contains("pad") || n.contains("shoe") || n.contains("plate") -> PartVisualKind.BRAKE_PAD
@@ -104,6 +111,99 @@ fun EpcCalloutBadge(
       style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
       color = Color.White,
     )
+  }
+}
+
+@Composable
+fun GooglePartImageButton(
+  oemNumber: String,
+  partName: String,
+  vehicleLabel: String = "",
+  modifier: Modifier = Modifier,
+) {
+  val context = LocalContext.current
+  val uriHandler = LocalUriHandler.current
+  val query = listOf(oemNumber, vehicleLabel, partName)
+    .filter { it.isNotBlank() }
+    .joinToString(" ")
+  val searchUrl = "https://www.google.com/search?tbm=isch&q=${Uri.encode(query)}"
+
+  IconButton(
+    onClick = {
+      runCatching {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(searchUrl)).apply {
+          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+      }.onFailure {
+        runCatching { uriHandler.openUri(searchUrl) }
+      }
+    },
+    modifier = modifier
+      .size(48.dp)
+      .semantics { contentDescription = "Search Google Images for OEM part $oemNumber" },
+  ) {
+    Box(
+      modifier = Modifier
+        .size(30.dp)
+        .clip(CircleShape)
+        .background(Color.White)
+        .border(1.dp, Color(0xFFCBD5E1), CircleShape),
+      contentAlignment = Alignment.Center,
+    ) {
+      Canvas(modifier = Modifier.size(18.dp)) {
+        val stroke = 3.2.dp.toPx()
+        val inset = stroke / 2f
+        val arcSize = Size(size.width - stroke, size.height - stroke)
+        // Red top arc
+        drawArc(
+          color = Color(0xFFEA4335),
+          startAngle = 215f,
+          sweepAngle = 105f,
+          useCenter = false,
+          topLeft = Offset(inset, inset),
+          size = arcSize,
+          style = Stroke(width = stroke, cap = StrokeCap.Butt),
+        )
+        // Yellow left arc
+        drawArc(
+          color = Color(0xFFFBBC05),
+          startAngle = 145f,
+          sweepAngle = 70f,
+          useCenter = false,
+          topLeft = Offset(inset, inset),
+          size = arcSize,
+          style = Stroke(width = stroke, cap = StrokeCap.Butt),
+        )
+        // Green bottom arc
+        drawArc(
+          color = Color(0xFF34A853),
+          startAngle = 45f,
+          sweepAngle = 100f,
+          useCenter = false,
+          topLeft = Offset(inset, inset),
+          size = arcSize,
+          style = Stroke(width = stroke, cap = StrokeCap.Butt),
+        )
+        // Blue right arc + horizontal bar
+        drawArc(
+          color = Color(0xFF4285F4),
+          startAngle = -5f,
+          sweepAngle = 55f,
+          useCenter = false,
+          topLeft = Offset(inset, inset),
+          size = arcSize,
+          style = Stroke(width = stroke, cap = StrokeCap.Butt),
+        )
+        drawLine(
+          color = Color(0xFF4285F4),
+          start = Offset(size.width * 0.50f, size.height * 0.50f),
+          end = Offset(size.width * 0.94f, size.height * 0.50f),
+          strokeWidth = stroke,
+          cap = StrokeCap.Square,
+        )
+      }
+    }
   }
 }
 

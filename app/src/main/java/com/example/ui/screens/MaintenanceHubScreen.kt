@@ -27,6 +27,10 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.TableChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +42,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -161,58 +166,133 @@ fun MaintenanceHubScreen(
       } else {
         // Predictive Telemetry Header Card
         item {
-          Surface(
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            modifier = Modifier
-              .fillMaxWidth()
-              .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), MaterialTheme.shapes.large),
-          ) {
-            Box {
-              Image(
-                painter = painterResource(id = R.drawable.img_maintenance_telemetry),
-                contentDescription = "Predictive maintenance telemetry schematic",
-                contentScale = ContentScale.Crop,
-                alpha = 0.28f,
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .height(148.dp),
-              )
-              Box(
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .height(148.dp)
-                  .background(
-                    Brush.horizontalGradient(
-                      listOf(
-                        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f),
-                        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f),
+          val baoClass = remember(vehicle) { PredictiveMaintenanceEngine.classifyVehicle(vehicle) }
+          var showBaoChart by remember { mutableStateOf(false) }
+
+          Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Surface(
+              shape = MaterialTheme.shapes.large,
+              color = MaterialTheme.colorScheme.surfaceContainer,
+              modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), MaterialTheme.shapes.large),
+            ) {
+              Box {
+                Image(
+                  painter = painterResource(id = R.drawable.img_maintenance_telemetry),
+                  contentDescription = "Predictive maintenance telemetry schematic",
+                  contentScale = ContentScale.Crop,
+                  alpha = 0.28f,
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .height(148.dp),
+                )
+                Box(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .height(148.dp)
+                    .background(
+                      Brush.horizontalGradient(
+                        listOf(
+                          MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f),
+                          MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f),
+                        )
                       )
                     )
-                  )
-              )
-              Row(
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-              ) {
-                VehicleHealthGauge(score = healthScore, size = 88.dp)
-                Spacer(Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                  Text(
-                    text = "Predictive Maintenance Hub",
-                    style = MaterialTheme.typography.titleLarge,
-                  )
-                  Text(
-                    text = "${vehicle.country} (${vehicle.marketCode}) • ${vehicle.powertrain} Calibration",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TelemetryCyan,
-                  )
-                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatMiniPill("$overdueCount Overdue", MaterialTheme.colorScheme.error)
-                    StatMiniPill("$dueSoonCount Due Soon", CautionAmber)
-                    StatMiniPill("$healthyCount OK", OemEmerald)
+                )
+                Row(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                ) {
+                  VehicleHealthGauge(score = healthScore, size = 88.dp)
+                  Spacer(Modifier.width(16.dp))
+                  Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                      text = "Predictive Maintenance Hub",
+                      style = MaterialTheme.typography.titleLarge,
+                    )
+                    Text(
+                      text = "BAO 35/88 (07/04): ${baoClass.titleBn} • PS Oil ${baoClass.powerSteeringTopUpLiters}",
+                      style = MaterialTheme.typography.labelMedium,
+                      color = TelemetryCyan,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                      StatMiniPill("$overdueCount Overdue", MaterialTheme.colorScheme.error)
+                      StatMiniPill("$dueSoonCount Due Soon", CautionAmber)
+                      StatMiniPill("$healthyCount OK", OemEmerald)
+                    }
+                  }
+                }
+              }
+            }
+
+            // 161 Field Workshop Company BAO 35/88 & Amendment 07/04 Reference Chart Card
+            Surface(
+              shape = MaterialTheme.shapes.medium,
+              color = MaterialTheme.colorScheme.surfaceContainer,
+              modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, CautionAmber.copy(alpha = 0.45f), MaterialTheme.shapes.medium),
+            ) {
+              Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.CenterVertically,
+                ) {
+                  Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.TableChart, contentDescription = null, tint = CautionAmber, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                      Text(
+                        text = "১৬১ ফিল্ড ওয়ার্কশপ কোং • BAO 35/88 (০৭/০৪)",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = CautionAmber,
+                      )
+                      Text(
+                        text = "তৈল ও ফিল্টার বদলীর চার্ট • টায়ার ৪০,০০০ কি.মি. • কুল্যান্ট ৩ বছর",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                      )
+                    }
+                  }
+                  TextButton(onClick = { showBaoChart = !showBaoChart }) {
+                    Text(if (showBaoChart) "Hide" else "Chart")
+                    Icon(
+                      imageVector = if (showBaoChart) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                      contentDescription = null,
+                    )
+                  }
+                }
+
+                AnimatedVisibility(visible = showBaoChart) {
+                  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    PredictiveMaintenanceEngine.baoChartRows.forEach { row ->
+                      Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier.fillMaxWidth(),
+                      ) {
+                        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                          Text(
+                            text = "${row.sl}. ${row.vehicleType}",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = TelemetryCyan,
+                          )
+                          Text("ইঞ্জিন অয়েল: ${row.engineOil}", style = MaterialTheme.typography.bodySmall)
+                          Text("ট্রান্স/ডিফারেন্সিয়াল: ${row.transDiffOil}", style = MaterialTheme.typography.bodySmall)
+                          Text("তেলের ফিল্টার: ${row.oilFilter}", style = MaterialTheme.typography.bodySmall)
+                          Text("ফুয়েল/এয়ার/টায়ার: ${row.fuelAndAirFilter}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                      }
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    PredictiveMaintenanceEngine.baoSpecialNotes.forEach { note ->
+                      Text("• $note", style = MaterialTheme.typography.bodySmall, color = CautionAmber)
+                    }
                   }
                 }
               }
