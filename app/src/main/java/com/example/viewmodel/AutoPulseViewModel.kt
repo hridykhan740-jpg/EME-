@@ -10,6 +10,7 @@ import com.example.data.PartSearchIndex
 import com.example.data.PartsCatalogEngine
 import com.example.data.PredictiveMaintenanceEngine
 import com.example.local.LocalHistoryRepository
+import com.example.local.LocalPdfCartItemEntity
 import com.example.local.LocalSearchHistoryEntity
 import com.example.local.LocalSelectedVehicleEntity
 import com.example.local.LocalViewedPartEntity
@@ -22,6 +23,7 @@ import com.example.model.DistanceUnit
 import com.example.model.LoginAlert
 import com.example.model.MaintenanceLog
 import com.example.model.MaintenanceUrgency
+import com.example.model.PartSubComponent
 import com.example.model.Powertrain
 import com.example.model.PredictiveMaintenanceItem
 import com.example.model.SavedPart
@@ -127,6 +129,10 @@ class AutoPulseViewModel(
 
   val localSelectedVehicles: StateFlow<List<LocalSelectedVehicleEntity>> =
     localHistoryRepository.observeSelectedVehicles(currentUserId)
+      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
+  val pdfCartItems: StateFlow<List<LocalPdfCartItemEntity>> =
+    localHistoryRepository.observePdfCart(currentUserId)
       .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
 
   // Super-Admin Streams (STRICT RBAC: never attached unless email matches mhossenali740@gmail.com)
@@ -253,7 +259,7 @@ class AutoPulseViewModel(
       result.fold(
         onSuccess = { verified ->
           _aiPartState.value = AiPartVerificationState.Success(part.id, verified)
-          val summary = "AI Verified OEM: ${verified.verifiedOemNumber} • Interval: ${verified.officialIntervalKm} km / ${verified.officialIntervalMonths} mo"
+          val summary = "EPC: ${verified.epcCatalogSource} • OEM: ${verified.verifiedOemNumber} • ${verified.officialIntervalKm} km / ${verified.officialIntervalMonths} mo (${verified.subComponentsBreakdown.size} sub-parts)"
           localHistoryRepository.attachAiVerificationReview(currentUserId, part, vehicle, summary)
         },
         onFailure = { error ->
@@ -263,6 +269,33 @@ class AutoPulseViewModel(
           )
         },
       )
+    }
+  }
+
+  fun addAssemblyToPdf(part: CatalogPart, vehicle: UserVehicle?) {
+    viewModelScope.launch {
+      localHistoryRepository.addAssemblyToPdf(currentUserId, part, vehicle)
+      _toastMessages.tryEmit("Added ${part.name} to PDF list")
+    }
+  }
+
+  fun addSubComponentToPdf(parentPart: CatalogPart, sub: PartSubComponent, vehicle: UserVehicle?) {
+    viewModelScope.launch {
+      localHistoryRepository.addSubComponentToPdf(currentUserId, parentPart, sub, vehicle)
+      _toastMessages.tryEmit("Added sub-part ${sub.name} (${sub.oemNumber}) to PDF list")
+    }
+  }
+
+  fun removePdfItem(itemKey: String) {
+    viewModelScope.launch {
+      localHistoryRepository.removePdfItem(currentUserId, itemKey)
+    }
+  }
+
+  fun clearPdfList() {
+    viewModelScope.launch {
+      localHistoryRepository.clearPdfCart(currentUserId)
+      _toastMessages.tryEmit("Cleared PDF parts export list")
     }
   }
 

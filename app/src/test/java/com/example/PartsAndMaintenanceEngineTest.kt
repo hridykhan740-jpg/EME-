@@ -5,11 +5,13 @@ import com.example.data.PartSearchIndex
 import com.example.data.PartsCatalogEngine
 import com.example.data.PredictiveMaintenanceEngine
 import com.example.data.VehicleCatalogData
+import com.example.data.VinDecoderEngine
 import com.example.model.CatalogSystem
 import com.example.model.MaintenanceLog
 import com.example.model.MaintenanceUrgency
 import com.example.model.Powertrain
 import com.example.model.UserVehicle
+import com.example.model.VehicleCategory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -44,44 +46,81 @@ class PartsAndMaintenanceEngineTest {
   )
 
   @Test
-  fun bangladeshMarketIncludesAllPopularModelsAndOemCodes() {
+  fun bangladeshMarketCoversAllFourVehicleCategoriesAndRequestedModels() {
     assertEquals("BD", VehicleCatalogData.markets.first().marketCode)
 
-    val bdModels = VehicleCatalogData.models
-      .filter { it.marketCodes.contains("BD") }
-      .map { it.model }
+    val bdModels = VehicleCatalogData.models.filter { it.marketCodes.contains("BD") }
+    val byCat = bdModels.groupBy { it.category }
 
-    val expectedModels = listOf(
-      "Corolla Axio",
-      "Corolla Fielder",
-      "Premio",
-      "Allion",
-      "Noah",
-      "HiAce",
-      "Land Cruiser Prado",
-      "Vezel / HR-V",
-      "Grace",
-      "Outlander",
-      "Tucson",
+    assertTrue(byCat[VehicleCategory.PRIVATE_SEDANS_HATCHBACKS].orEmpty().isNotEmpty())
+    assertTrue(byCat[VehicleCategory.SUVS_CROSSOVERS_4X4].orEmpty().isNotEmpty())
+    assertTrue(byCat[VehicleCategory.MICROBUSES_MPVS_VANS].orEmpty().isNotEmpty())
+    assertTrue(byCat[VehicleCategory.COMMERCIAL_TRUCKS_BUSES].orEmpty().isNotEmpty())
+
+    val expectedBdModels = listOf(
+      "Corolla Axio", "Corolla Fielder", "Allion", "Premio", "Probox", "Aqua", "Prius",
+      "Civic", "Grace", "Fit", "Sunny", "Note", "Lancer EX", "Axela", "Demio", "Swift",
+      "Land Cruiser Prado", "Land Cruiser V8 / 300", "Harrier", "Vezel", "HR-V",
+      "Outlander", "X-Trail", "Tucson", "Sportage", "ZS", "H6",
+      "Noah", "Voxy", "Alphard", "HiAce", "Serena", "Delica",
+      "Hilux", "Dyna", "L200", "Fuso Canter", "Ace", "Intra", "Xenon", "LPT 1615",
+      "Prima", "Dost", "Ecomet", "Viking", "Bolero Pickup", "Jeeto", "D-Max", "N-Series",
+      "AK1J", "RM2", "300 / 500 Series", "Pro 2049",
     )
-    expectedModels.forEach { expected ->
-      assertTrue("Missing BD model: $expected", bdModels.any { it.contains(expected) })
+    val modelNames = bdModels.map { "${it.brand} ${it.model}" }
+    expectedBdModels.forEach { expected ->
+      assertTrue(
+        "Missing Bangladesh vehicle: $expected",
+        modelNames.any { it.contains(expected, ignoreCase = true) },
+      )
     }
+  }
 
+  @Test
+  fun twelveSystemsAndMicroSubComponentsAreGeneratedAndSearchIndexed() {
     val axioParts = PartsCatalogEngine.generateCatalogForVehicle(sampleAxioBd)
     val coveredSystems = axioParts.map { it.system }.toSet()
     assertEquals(CatalogSystem.entries.toSet(), coveredSystems)
 
+    val oilFilterAssembly = axioParts.first { it.id == "eng_oil_filter" }
+    assertTrue(oilFilterAssembly.epcCatalogRef.contains("Toyota EPC"))
+    assertTrue(oilFilterAssembly.subComponents.size >= 5)
+
+    val subNames = oilFilterAssembly.subComponents.joinToString(" | ") { it.name.lowercase() }
+    assertTrue(subNames.contains("element") || subNames.contains("cartridge"))
+    assertTrue(subNames.contains("o-ring"))
+    assertTrue(subNames.contains("crush washer"))
+    assertTrue(subNames.contains("housing cap"))
+    assertTrue(subNames.contains("bypass"))
+
+    // Every assembly has micro-level sub-components
+    assertTrue(axioParts.all { it.subComponents.isNotEmpty() && it.epcCatalogRef.isNotBlank() })
+
     val index = PartSearchIndex(axioParts)
-    val axioOilFilterHits = index.search("90915-YZZF2")
-    assertTrue(axioOilFilterHits.any { it.id == "eng_oil_filter" })
+    assertTrue(index.search("90915-YZZF2").any { it.id == "eng_oil_filter" })
+    // Searching by sub-part OEM or keyword resolves the parent assembly
+    assertTrue(index.search("90430-12031").any { it.id == "eng_oil_filter" })
+    assertTrue(index.search("crush washer").any { it.id == "eng_oil_filter" })
   }
 
   @Test
-  fun evCatalogExcludesPetrolSparkPlugsAndIncludesDielectricCoolant() {
+  fun vinDecoderResolvesJdmChassisIsoVinAndCommercialModels() {
+    val jdmAxio = VinDecoderEngine.searchByVinOrModel("NKE165-7045123")
+    assertTrue(jdmAxio.any { it.modelSpec.model == "Corolla Axio" && it.marketCode == "BD" })
+
+    val isoVin = VinDecoderEngine.searchByVinOrModel("JTDKN3DU0N0123456")
+    assertTrue(isoVin.any { it.modelSpec.brand == "Toyota" && it.inferredYear == 2022 })
+
+    val hinoMatch = VinDecoderEngine.searchByVinOrModel("Hino AK1J")
+    assertTrue(hinoMatch.any { it.modelSpec.brand == "Hino" && it.modelSpec.model == "AK1J" })
+  }
+
+  @Test
+  fun evCatalogExcludesPetrolSparkPlugsAndExhaust() {
     val evParts = PartsCatalogEngine.generateCatalogForVehicle(sampleEv)
     assertFalse(evParts.any { it.id == "eng_spark_or_glow" })
-    assertTrue(evParts.any { it.id == "eng_ev_drive_coolant" })
+    assertFalse(evParts.any { it.system == CatalogSystem.EXHAUST })
+    assertTrue(evParts.any { it.system == CatalogSystem.COOLING })
   }
 
   @Test
@@ -96,7 +135,7 @@ class PartsAndMaintenanceEngineTest {
     assertTrue(initialSchedule.all { it.intervalKm > 0 && it.intervalMonths > 0 })
 
     val oilBefore = initialSchedule.first { it.taskKey == "engine_oil_filter" }
-    assertEquals(8500, oilBefore.intervalKm) // BD severe market factor applied
+    assertEquals(8500, oilBefore.intervalKm)
     assertEquals(12, oilBefore.intervalMonths)
 
     val logs = listOf(

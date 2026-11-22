@@ -11,6 +11,7 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.model.CatalogPart
+import com.example.model.PartSubComponent
 import com.example.model.UserVehicle
 import kotlinx.coroutines.flow.Flow
 
@@ -52,6 +53,23 @@ data class LocalSelectedVehicleEntity(
   val selectedAtEpochMs: Long = System.currentTimeMillis(),
 )
 
+@Entity(tableName = "local_pdf_cart_items")
+data class LocalPdfCartItemEntity(
+  @PrimaryKey val itemKey: String,
+  val userId: String,
+  val partName: String,
+  val oemNumber: String,
+  val aftermarketNumber: String,
+  val systemName: String,
+  val isSubComponent: Boolean,
+  val parentAssemblyName: String?,
+  val vehicleSummary: String,
+  val specNote: String,
+  val priceUsd: Double,
+  val quantity: Int = 1,
+  val addedAtEpochMs: Long = System.currentTimeMillis(),
+)
+
 @Dao
 interface LocalHistoryDao {
   @Query("SELECT * FROM local_search_history WHERE userId = :userId ORDER BY searchedAtEpochMs DESC LIMIT 50")
@@ -62,6 +80,9 @@ interface LocalHistoryDao {
 
   @Query("SELECT * FROM local_selected_vehicles WHERE userId = :userId ORDER BY selectedAtEpochMs DESC LIMIT 25")
   fun observeSelectedVehicles(userId: String): Flow<List<LocalSelectedVehicleEntity>>
+
+  @Query("SELECT * FROM local_pdf_cart_items WHERE userId = :userId ORDER BY addedAtEpochMs DESC")
+  fun observePdfCart(userId: String): Flow<List<LocalPdfCartItemEntity>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insertSearch(entry: LocalSearchHistoryEntity)
@@ -85,6 +106,15 @@ interface LocalHistoryDao {
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun upsertSelectedVehicle(entry: LocalSelectedVehicleEntity)
 
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun upsertPdfCartItem(entry: LocalPdfCartItemEntity)
+
+  @Query("DELETE FROM local_pdf_cart_items WHERE userId = :userId AND itemKey = :itemKey")
+  suspend fun deletePdfCartItem(userId: String, itemKey: String)
+
+  @Query("DELETE FROM local_pdf_cart_items WHERE userId = :userId")
+  suspend fun clearPdfCart(userId: String)
+
   @Query("DELETE FROM local_search_history WHERE userId = :userId")
   suspend fun clearSearchHistory(userId: String)
 
@@ -97,8 +127,9 @@ interface LocalHistoryDao {
     LocalSearchHistoryEntity::class,
     LocalViewedPartEntity::class,
     LocalSelectedVehicleEntity::class,
+    LocalPdfCartItemEntity::class,
   ],
-  version = 1,
+  version = 2,
   exportSchema = false,
 )
 abstract class AppLocalDatabase : RoomDatabase() {
@@ -114,7 +145,10 @@ abstract class AppLocalDatabase : RoomDatabase() {
           context.applicationContext,
           AppLocalDatabase::class.java,
           "autopulse_local_history.db",
-        ).build().also { INSTANCE = it }
+        )
+          .fallbackToDestructiveMigration(true)
+          .build()
+          .also { INSTANCE = it }
       }
     }
   }
@@ -130,6 +164,9 @@ class LocalHistoryRepository(private val dao: LocalHistoryDao) {
 
   fun observeSelectedVehicles(userId: String): Flow<List<LocalSelectedVehicleEntity>> =
     dao.observeSelectedVehicles(userId)
+
+  fun observePdfCart(userId: String): Flow<List<LocalPdfCartItemEntity>> =
+    dao.observePdfCart(userId)
 
   suspend fun recordSearch(
     userId: String,
@@ -189,7 +226,6 @@ class LocalHistoryRepository(private val dao: LocalHistoryDao) {
       summary = reviewSummary,
       updatedAt = System.currentTimeMillis(),
     )
-    // Ensure row exists even if update ran before view upsert
     recordViewedPart(userId, part, vehicle, reviewSummary)
   }
 
@@ -209,6 +245,63 @@ class LocalHistoryRepository(private val dao: LocalHistoryDao) {
         selectedAtEpochMs = System.currentTimeMillis(),
       )
     )
+  }
+
+  suspend fun addAssemblyToPdf(userId: String, part: CatalogPart, vehicle: UserVehicle?) {
+    val vehicleSummary = vehicle?.let { "${it.shortTitle()} (${it.marketCode})" } ?: "General Fitment"
+    val itemKey = "$userId:ASM:${part.id}:${vehicle?.id ?: "default"}"
+    dao.upsertPdfCartItem(
+      LocalPdfCartItemEntity(
+        itemKey = itemKey,
+        userId = userId,
+        partName = part.name,
+        oemNumber = part.oemNumber,
+        aftermarketNumber = part.aftermarketNumber,
+        systemName = part.system.displayName,
+        isSubComponent = false,
+        parentAssemblyName = null,
+        vehicleSummary = vehicleSummary,
+        specNote = part.specSummary,
+        priceUsd = part.priceUsd,
+        quantity = 1,
+        addedAtEpochMs = System.currentTimeMillis(),
+      )
+    )
+  }
+
+  suspend fun addSubComponentToPdf(
+    userId: String,
+    parentPart: CatalogPart,
+    sub: PartSubComponent,
+    vehicle: UserVehicle?,
+  ) {
+    val vehicleSummary = vehicle?.let { "${it.shortTitle()} (${it.marketCode})" } ?: "General Fitment"
+    val itemKey = "$userId:SUB:${parentPart.id}:${sub.id}:${vehicle?.id ?: "default"}"
+    dao.upsertPdfCartItem(
+      LocalPdfCartItemEntity(
+        itemKey = itemKey,
+        userId = userId,
+        partName = sub.name,
+        oemNumber = sub.oemNumber,
+        aftermarketNumber = sub.aftermarketNumber,
+        systemName = parentPart.system.displayName,
+        isSubComponent = true,
+        parentAssemblyName = parentPart.name,
+        vehicleSummary = vehicleSummary,
+        specNote = "${sub.quantity} • ${sub.specNote}",
+        priceUsd = sub.priceUsd,
+        quantity = 1,
+        addedAtEpochMs = System.currentTimeMillis(),
+      )
+    )
+  }
+
+  suspend fun removePdfItem(userId: String, itemKey: String) {
+    dao.deletePdfCartItem(userId, itemKey)
+  }
+
+  suspend fun clearPdfCart(userId: String) {
+    dao.clearPdfCart(userId)
   }
 
   suspend fun clearHistory(userId: String) {

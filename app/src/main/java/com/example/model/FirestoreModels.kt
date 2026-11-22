@@ -28,19 +28,34 @@ enum class Powertrain(val label: String) {
   }
 }
 
+enum class VehicleCategory(val displayName: String, val shortLabel: String) {
+  PRIVATE_SEDANS_HATCHBACKS("Private Sedans & Hatchbacks", "Sedans & Hatch"),
+  SUVS_CROSSOVERS_4X4("SUVs, Crossovers & 4x4s", "SUVs & 4x4"),
+  MICROBUSES_MPVS_VANS("Microbuses, MPVs & Vans", "MPVs & Vans"),
+  COMMERCIAL_TRUCKS_BUSES("Commercial Trucks, Pickups & Buses", "Commercial");
+}
+
 enum class CatalogSystem(val displayName: String, val shortCode: String) {
   ENGINE("Engine", "ENG"),
+  FUEL_AIR("Fuel & Air", "FUL"),
   TRANSMISSION("Transmission", "TRN"),
+  CLUTCH("Clutch", "CLT"),
   SUSPENSION("Suspension", "SUS"),
-  ELECTRICAL("Electrical", "ELC"),
+  STEERING("Steering", "STR"),
   BRAKES("Brakes", "BRK"),
-  BODY("Body", "BDY");
+  COOLING("Cooling", "COL"),
+  AC_HVAC("AC / HVAC", "HVC"),
+  ELECTRICAL("Electrical", "ELC"),
+  EXHAUST("Exhaust", "EXH"),
+  BODY_INTERIOR("Body & Interior", "BDY");
 
   companion object {
-    fun fromRaw(raw: String?): CatalogSystem =
-      entries.firstOrNull {
+    fun fromRaw(raw: String?): CatalogSystem {
+      if (raw.equals("BODY", ignoreCase = true)) return BODY_INTERIOR
+      return entries.firstOrNull {
         it.name.equals(raw, ignoreCase = true) || it.displayName.equals(raw, ignoreCase = true)
       } ?: ENGINE
+    }
   }
 }
 
@@ -63,7 +78,11 @@ enum class PartVisualKind {
   TRANSMISSION_GEAR,
   FLUID_BOTTLE,
   BELT_TIMING,
-  BODY_WIPER
+  BODY_WIPER,
+  CLUTCH_DISC,
+  STEERING_RACK,
+  EXHAUST_PIPE,
+  HVAC_BLOWER,
 }
 
 enum class MaintenanceUrgency(val label: String) {
@@ -166,6 +185,17 @@ data class LoginAlert(
   @ServerTimestamp val updatedAt: Timestamp? = null,
 )
 
+data class PartSubComponent(
+  val id: String,
+  val name: String,
+  val oemNumber: String,
+  val aftermarketNumber: String,
+  val quantity: String,
+  val specNote: String,
+  val priceUsd: Double,
+  val stockStatus: StockStatus = StockStatus.IN_STOCK,
+)
+
 data class CatalogPart(
   val id: String,
   val system: CatalogSystem,
@@ -175,6 +205,7 @@ data class CatalogPart(
   val oemManufacturer: String,
   val aftermarketNumber: String,
   val aftermarketBrand: String,
+  val epcCatalogRef: String,
   val stockStatus: StockStatus,
   val warehouseQty: Int,
   val priceUsd: Double,
@@ -184,6 +215,7 @@ data class CatalogPart(
   val visualKind: PartVisualKind,
   val linkedTaskKey: String? = null,
   val keywords: List<String> = emptyList(),
+  val subComponents: List<PartSubComponent> = emptyList(),
 )
 
 data class PredictiveMaintenanceItem(
@@ -206,6 +238,8 @@ data class PredictiveMaintenanceItem(
 
 data class AiPartVerification(
   val verifiedOemNumber: String,
+  val epcCatalogSource: String,
+  val subComponentsBreakdown: List<String>,
   val aftermarketEquivalents: String,
   val officialIntervalKm: Int,
   val officialIntervalMonths: Int,

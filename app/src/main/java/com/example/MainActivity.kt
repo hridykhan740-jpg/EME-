@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +22,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -67,9 +71,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -90,6 +98,7 @@ import com.example.auth.signOutWithCleanup
 import com.example.data.AiVerificationRepository
 import com.example.data.GarageRepository
 import com.example.data.PartSearchIndex
+import com.example.export.PdfPartsExporter
 import com.example.local.AppLocalDatabase
 import com.example.local.LocalHistoryRepository
 import com.example.model.UiState
@@ -107,6 +116,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 private object Routes {
   const val MAINTENANCE = "maintenance"
@@ -166,20 +176,34 @@ fun AppRootNavigation(auth: FirebaseAuth = Firebase.auth) {
   }
 
   val user = currentUser
-  if (user == null) {
-    AuthScreen(
-      onAuthSuccess = { currentUser = auth.currentUser },
-    )
-  } else {
-    val uid = user.uid
-    key(uid) {
-      AuthenticatedAutoPulseApp(
-        currentUserId = uid,
-        userDisplayName = user.displayName ?: "Driver",
-        userEmail = user.email,
-        userPhotoUrl = user.photoUrl?.toString(),
+  Box(modifier = Modifier.fillMaxSize()) {
+    if (user == null) {
+      AuthScreen(
+        onAuthSuccess = { currentUser = auth.currentUser },
       )
+    } else {
+      val uid = user.uid
+      key(uid) {
+        AuthenticatedAutoPulseApp(
+          currentUserId = uid,
+          userDisplayName = user.displayName ?: "Driver",
+          userEmail = user.email,
+          userPhotoUrl = user.photoUrl?.toString(),
+        )
+      }
     }
+
+    // Global non-interactive EME Crest watermark across every screen
+    Image(
+      painter = painterResource(id = R.drawable.eme_crest_watermark),
+      contentDescription = null,
+      contentScale = ContentScale.Crop,
+      modifier = Modifier
+        .align(Alignment.Center)
+        .size(290.dp)
+        .clip(CircleShape)
+        .alpha(0.055f),
+    )
   }
 }
 
@@ -231,6 +255,7 @@ fun AuthenticatedAutoPulseApp(
   val localSearchHistory by viewModel.localSearchHistory.collectAsStateWithLifecycle()
   val localViewedParts by viewModel.localViewedParts.collectAsStateWithLifecycle()
   val localSelectedVehicles by viewModel.localSelectedVehicles.collectAsStateWithLifecycle()
+  val pdfCartItems by viewModel.pdfCartItems.collectAsStateWithLifecycle()
 
   val adminUserLogsState by viewModel.adminUserLogsState.collectAsStateWithLifecycle()
   val loginAlertsState by viewModel.loginAlertsState.collectAsStateWithLifecycle()
@@ -282,7 +307,14 @@ fun AuthenticatedAutoPulseApp(
         viewModel.onGarageSnapshotObserved(snapshot.vehicles, activeVehicle)
       }
 
-      val catalogParts = remember(activeVehicle?.brand, activeVehicle?.model, activeVehicle?.year, activeVehicle?.variant, activeVehicle?.marketCode) {
+      val catalogParts = remember(
+        activeVehicle?.brand,
+        activeVehicle?.model,
+        activeVehicle?.year,
+        activeVehicle?.variant,
+        activeVehicle?.marketCode,
+        activeVehicle?.powertrain,
+      ) {
         viewModel.buildCatalogFor(activeVehicle)
       }
       val searchIndex = remember(catalogParts) { PartSearchIndex(catalogParts) }
@@ -355,6 +387,16 @@ fun AuthenticatedAutoPulseApp(
                 TopAppBar(
                   title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                      Image(
+                        painter = painterResource(id = R.drawable.eme_crest_watermark),
+                        contentDescription = "EME Crest",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                          .size(28.dp)
+                          .clip(CircleShape)
+                          .border(1.dp, TelemetryCyan.copy(alpha = 0.6f), CircleShape),
+                      )
+                      Spacer(Modifier.width(8.dp))
                       Text("AutoPulse", style = MaterialTheme.typography.titleLarge)
                       if (activeVehicle != null) {
                         Text(
@@ -545,6 +587,7 @@ fun AuthenticatedAutoPulseApp(
                     allParts = catalogParts,
                     filteredParts = filteredParts,
                     savedParts = snapshot.savedParts,
+                    pdfCartItems = pdfCartItems,
                     selectedSystem = selectedSystem,
                     searchQuery = searchQuery,
                     inStockOnly = inStockOnly,
@@ -568,6 +611,22 @@ fun AuthenticatedAutoPulseApp(
                       viewModel.verifyPartWithAi(part, activeVehicle)
                     },
                     onResetAiPartState = viewModel::resetAiPartState,
+                    onAddAssemblyToPdf = { part ->
+                      viewModel.addAssemblyToPdf(part, activeVehicle)
+                    },
+                    onAddSubPartToPdf = { parentPart, sub ->
+                      viewModel.addSubComponentToPdf(parentPart, sub, activeVehicle)
+                    },
+                    onRemovePdfItem = viewModel::removePdfItem,
+                    onClearPdfList = viewModel::clearPdfList,
+                    onExportPdfShare = {
+                      val exportRes = PdfPartsExporter.exportAndShare(context, activeVehicle, pdfCartItems)
+                      exportRes.onFailure { err ->
+                        scope.launch {
+                          snackbarHostState.showSnackbar(err.localizedMessage ?: "PDF export failed")
+                        }
+                      }
+                    },
                   )
                 }
 

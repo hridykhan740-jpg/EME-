@@ -50,11 +50,17 @@ fun formatDistance(km: Long, unit: DistanceUnit): String {
 
 fun systemAccentColor(system: CatalogSystem): Color = when (system) {
   CatalogSystem.ENGINE -> RacingOrange
+  CatalogSystem.FUEL_AIR -> Color(0xFFF59E0B)
   CatalogSystem.TRANSMISSION -> CautionAmber
+  CatalogSystem.CLUTCH -> Color(0xFFA78BFA)
   CatalogSystem.SUSPENSION -> TelemetryCyan
-  CatalogSystem.ELECTRICAL -> Color(0xFF60A5FA)
+  CatalogSystem.STEERING -> Color(0xFF38BDF8)
   CatalogSystem.BRAKES -> Color(0xFFFB7185)
-  CatalogSystem.BODY -> OemEmerald
+  CatalogSystem.COOLING -> Color(0xFF2DD4BF)
+  CatalogSystem.AC_HVAC -> Color(0xFF67E8F9)
+  CatalogSystem.ELECTRICAL -> Color(0xFF60A5FA)
+  CatalogSystem.EXHAUST -> Color(0xFF94A3B8)
+  CatalogSystem.BODY_INTERIOR -> OemEmerald
 }
 
 @Composable
@@ -91,17 +97,15 @@ fun PartVisualIdentifier(
       val cx = w / 2f
       val cy = h / 2f
 
-      // Subtle technical CAD blueprint crosshair
       drawLine(gridLine, Offset(cx, 0f), Offset(cx, h), strokeWidth = 1f)
       drawLine(gridLine, Offset(0f, cy), Offset(w, cy), strokeWidth = 1f)
 
       when (visualKind) {
-        PartVisualKind.BRAKE_ROTOR -> {
+        PartVisualKind.BRAKE_ROTOR, PartVisualKind.CLUTCH_DISC -> {
           val rOuter = minOf(w, h) * 0.42f
           val rInner = rOuter * 0.45f
           drawCircle(silver, radius = rOuter, center = Offset(cx, cy), style = Stroke(3.2f))
           drawCircle(accent, radius = rInner, center = Offset(cx, cy), style = Stroke(2.5f))
-          // Drilled cooling holes
           for (i in 0 until 8) {
             val angle = (i * 45.0) * PI / 180.0
             val hx = cx + (rOuter * 0.72f) * cos(angle).toFloat()
@@ -193,6 +197,36 @@ fun PartVisualIdentifier(
           drawCircle(accent, radius = 6.5f, center = Offset(w * 0.80f, h * 0.68f))
         }
 
+        PartVisualKind.STEERING_RACK -> {
+          drawLine(silver, Offset(w * 0.12f, cy), Offset(w * 0.88f, cy), strokeWidth = 4f, cap = StrokeCap.Round)
+          drawRoundRect(
+            color = accent,
+            topLeft = Offset(w * 0.32f, h * 0.36f),
+            size = Size(w * 0.36f, h * 0.28f),
+            cornerRadius = CornerRadius(6f, 6f),
+            style = Stroke(2.8f),
+          )
+          drawCircle(accent, radius = 5.5f, center = Offset(w * 0.14f, cy))
+          drawCircle(accent, radius = 5.5f, center = Offset(w * 0.86f, cy))
+        }
+
+        PartVisualKind.EXHAUST_PIPE -> {
+          val pipe = Path().apply {
+            moveTo(w * 0.14f, h * 0.66f)
+            lineTo(w * 0.40f, h * 0.66f)
+            lineTo(w * 0.60f, h * 0.36f)
+            lineTo(w * 0.86f, h * 0.36f)
+          }
+          drawPath(pipe, color = silver, style = Stroke(5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+          drawRoundRect(
+            color = accent,
+            topLeft = Offset(w * 0.34f, h * 0.38f),
+            size = Size(w * 0.32f, h * 0.22f),
+            cornerRadius = CornerRadius(8f, 8f),
+            style = Stroke(2.8f),
+          )
+        }
+
         PartVisualKind.BATTERY_MODULE -> {
           drawRoundRect(
             color = silver,
@@ -203,7 +237,6 @@ fun PartVisualIdentifier(
           )
           drawRect(accent, topLeft = Offset(w * 0.24f, h * 0.16f), size = Size(w * 0.14f, h * 0.10f))
           drawRect(silver, topLeft = Offset(w * 0.62f, h * 0.16f), size = Size(w * 0.14f, h * 0.10f))
-          // Lightning pulse inside
           val bolt = Path().apply {
             moveTo(cx + 4f, h * 0.34f)
             lineTo(cx - 8f, h * 0.52f)
@@ -229,7 +262,7 @@ fun PartVisualIdentifier(
           }
         }
 
-        PartVisualKind.TRANSMISSION_GEAR -> {
+        PartVisualKind.TRANSMISSION_GEAR, PartVisualKind.HVAC_BLOWER -> {
           val r = minOf(w, h) * 0.30f
           drawCircle(silver, radius = r, center = Offset(cx, cy), style = Stroke(3.2f))
           drawCircle(accent, radius = r * 0.45f, center = Offset(cx, cy), style = Stroke(2.5f))

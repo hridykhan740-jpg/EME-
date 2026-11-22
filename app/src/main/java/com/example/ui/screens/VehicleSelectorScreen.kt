@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,7 +26,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -35,12 +38,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.QrCodeScanner
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -71,7 +78,11 @@ import com.example.data.MarketSpec
 import com.example.data.VehicleCatalogData
 import com.example.data.VehicleModelSpec
 import com.example.data.VehicleVariantSpec
+import com.example.data.VinDecodeMatch
+import com.example.data.VinDecoderEngine
 import com.example.model.Powertrain
+import com.example.model.VehicleCategory
+import com.example.ui.theme.OemEmerald
 import com.example.ui.theme.RacingOrange
 import com.example.ui.theme.TelemetryCyan
 
@@ -85,8 +96,8 @@ object VehicleStepRoutes {
 
 private enum class VehicleStep(val route: String, val index: Int, val label: String, val subtitle: String) {
   COUNTRY(VehicleStepRoutes.COUNTRY, 0, "Country", "1. Country & Market Specification"),
-  BRAND(VehicleStepRoutes.BRAND, 1, "Brand", "2. Select Manufacturer"),
-  MODEL(VehicleStepRoutes.MODEL, 2, "Model", "3. Select Model"),
+  BRAND(VehicleStepRoutes.BRAND, 1, "Brand", "2. Manufacturer & Category"),
+  MODEL(VehicleStepRoutes.MODEL, 2, "Model", "3. Select Vehicle Model"),
   YEAR(VehicleStepRoutes.YEAR, 3, "Year", "4. Model Year"),
   VARIANT(VehicleStepRoutes.VARIANT, 4, "Variant", "5. Variant & Odometer");
 
@@ -120,14 +131,19 @@ fun VehicleSelectorScreen(
   val currentStep = VehicleStep.fromRoute(backStackEntry?.destination?.route)
 
   var selectedMarket by remember { mutableStateOf<MarketSpec?>(null) }
+  var selectedCategory by remember { mutableStateOf<VehicleCategory?>(null) }
   var selectedBrand by remember { mutableStateOf<String?>(null) }
   var selectedModelSpec by remember { mutableStateOf<VehicleModelSpec?>(null) }
   var selectedYear by remember { mutableStateOf<Int?>(null) }
   var selectedVariant by remember { mutableStateOf<VehicleVariantSpec?>(null) }
   var odometerText by remember { mutableStateOf("25000") }
   var nicknameText by remember { mutableStateOf("") }
+  var vinModelQuery by remember { mutableStateOf("") }
 
-  // When at the first step (Country), allow dismissing back to Garage/Hub if user already has vehicles
+  val vinMatches = remember(vinModelQuery) {
+    VinDecoderEngine.searchByVinOrModel(vinModelQuery)
+  }
+
   BackHandler(enabled = currentStep == VehicleStep.COUNTRY && canDismiss) {
     onBackDismiss()
   }
@@ -136,6 +152,20 @@ fun VehicleSelectorScreen(
     val popped = stepNavController.popBackStack()
     if (!popped && canDismiss) {
       onBackDismiss()
+    }
+  }
+
+  val applyVinMatch: (VinDecodeMatch) -> Unit = { match ->
+    selectedMarket = VehicleCatalogData.markets.firstOrNull { it.marketCode == match.marketCode }
+      ?: VehicleCatalogData.markets.first()
+    selectedCategory = match.modelSpec.category
+    selectedBrand = match.modelSpec.brand
+    selectedModelSpec = match.modelSpec
+    selectedYear = match.inferredYear
+    selectedVariant = match.variantSpec
+    vinModelQuery = ""
+    stepNavController.navigate(VehicleStepRoutes.VARIANT) {
+      launchSingleTop = true
     }
   }
 
@@ -187,7 +217,74 @@ fun VehicleSelectorScreen(
           .widthIn(max = 680.dp)
           .padding(horizontal = 16.dp),
       ) {
-        // Progress Indicator across the 5 Compose Navigation steps
+        // Dual Search Bar: VIN / JDM Chassis Frame (e.g. NKE165, NZT260) OR Model Name
+        OutlinedTextField(
+          value = vinModelQuery,
+          onValueChange = { vinModelQuery = it },
+          placeholder = { Text("Quick VIN / Frame (e.g. NKE165, JTD) or Model (HiAce, Hino)…") },
+          leadingIcon = { Icon(Icons.Rounded.QrCodeScanner, contentDescription = null, tint = TelemetryCyan) },
+          trailingIcon = {
+            if (vinModelQuery.isNotEmpty()) {
+              IconButton(onClick = { vinModelQuery = "" }) {
+                Icon(Icons.Rounded.Clear, contentDescription = "Clear VIN or model search")
+              }
+            }
+          },
+          singleLine = true,
+          shape = MaterialTheme.shapes.medium,
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("vin_model_search_input"),
+        )
+
+        AnimatedVisibility(visible = vinMatches.isNotEmpty()) {
+          Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 4.dp,
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(top = 6.dp)
+              .border(1.dp, TelemetryCyan.copy(alpha = 0.4f), MaterialTheme.shapes.medium),
+          ) {
+            Column {
+              vinMatches.take(5).forEachIndexed { idx, match ->
+                Row(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { applyVinMatch(match) }
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+                    .testTag("vin_match_${match.variantSpec.chassisCode}"),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                  Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                      text = "${match.inferredYear} ${match.modelSpec.brand} ${match.modelSpec.model}",
+                      style = MaterialTheme.typography.titleSmall,
+                    )
+                    Text(
+                      text = "${match.matchReason} • ${match.variantSpec.name}",
+                      style = MaterialTheme.typography.bodySmall,
+                      color = TelemetryCyan,
+                    )
+                  }
+                  Text(
+                    text = match.marketCode,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = OemEmerald,
+                  )
+                }
+                if (idx < minOf(4, vinMatches.lastIndex)) {
+                  HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+              }
+            }
+          }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
         LinearProgressIndicator(
           progress = { (currentStep.index + 1) / 5f },
           modifier = Modifier
@@ -200,7 +297,6 @@ fun VehicleSelectorScreen(
 
         Spacer(Modifier.height(10.dp))
 
-        // Interactive Step Breadcrumb Trail (tap any visited step to pop back via NavController)
         StepBreadcrumbRow(
           currentStep = currentStep,
           selectedMarket = selectedMarket,
@@ -216,7 +312,6 @@ fun VehicleSelectorScreen(
 
         Spacer(Modifier.height(10.dp))
 
-        // Multi-Step Compose Navigation Graph
         NavHost(
           navController = stepNavController,
           startDestination = VehicleStepRoutes.COUNTRY,
@@ -239,6 +334,7 @@ fun VehicleSelectorScreen(
               selectedMarket = selectedMarket,
               onSelectMarket = { market ->
                 selectedMarket = market
+                selectedCategory = null
                 selectedBrand = null
                 selectedModelSpec = null
                 selectedYear = null
@@ -251,10 +347,12 @@ fun VehicleSelectorScreen(
           }
 
           composable(VehicleStepRoutes.BRAND) {
-            val marketCode = selectedMarket?.marketCode ?: "JDM"
+            val marketCode = selectedMarket?.marketCode ?: "BD"
             BrandStepContent(
               marketCode = marketCode,
+              selectedCategory = selectedCategory,
               selectedBrand = selectedBrand,
+              onSelectCategory = { selectedCategory = it },
               onSelectBrand = { brand ->
                 selectedBrand = brand
                 selectedModelSpec = null
@@ -268,11 +366,12 @@ fun VehicleSelectorScreen(
           }
 
           composable(VehicleStepRoutes.MODEL) {
-            val marketCode = selectedMarket?.marketCode ?: "JDM"
+            val marketCode = selectedMarket?.marketCode ?: "BD"
             val brand = selectedBrand ?: "Toyota"
             ModelStepContent(
               marketCode = marketCode,
               brand = brand,
+              selectedCategory = selectedCategory,
               selectedModelSpec = selectedModelSpec,
               onSelectModel = { modelSpec ->
                 selectedModelSpec = modelSpec
@@ -422,48 +521,73 @@ private fun CountryStepContent(
 @Composable
 private fun BrandStepContent(
   marketCode: String,
+  selectedCategory: VehicleCategory?,
   selectedBrand: String?,
+  onSelectCategory: (VehicleCategory?) -> Unit,
   onSelectBrand: (String) -> Unit,
 ) {
-  val brands = remember(marketCode) { VehicleCatalogData.brandsForMarket(marketCode) }
-  LazyVerticalGrid(
-    columns = GridCells.Adaptive(minSize = 150.dp),
-    verticalArrangement = Arrangement.spacedBy(10.dp),
-    horizontalArrangement = Arrangement.spacedBy(10.dp),
-    contentPadding = PaddingValues(bottom = 24.dp),
-  ) {
-    items(brands, key = { it }) { brand ->
-      val isSelected = selectedBrand == brand
-      Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-        modifier = Modifier
-          .fillMaxWidth()
-          .heightIn(min = 74.dp)
-          .clip(MaterialTheme.shapes.medium)
-          .border(
-            width = if (isSelected) 1.5.dp else 1.dp,
-            color = if (isSelected) RacingOrange else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-            shape = MaterialTheme.shapes.medium,
-          )
-          .clickable { onSelectBrand(brand) }
-          .testTag("brand_$brand"),
-      ) {
-        Row(
-          modifier = Modifier.padding(14.dp),
-          verticalAlignment = Alignment.CenterVertically,
+  val brands = remember(marketCode, selectedCategory) {
+    VehicleCatalogData.brandsForMarket(marketCode, selectedCategory)
+  }
+  Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      item {
+        FilterChip(
+          selected = selectedCategory == null,
+          onClick = { onSelectCategory(null) },
+          label = { Text("All Fleet") },
+          modifier = Modifier.testTag("category_chip_all"),
+        )
+      }
+      items(VehicleCategory.entries) { cat ->
+        FilterChip(
+          selected = selectedCategory == cat,
+          onClick = { onSelectCategory(if (selectedCategory == cat) null else cat) },
+          label = { Text(cat.shortLabel) },
+          modifier = Modifier.testTag("category_chip_${cat.name.lowercase()}"),
+        )
+      }
+    }
+
+    LazyVerticalGrid(
+      columns = GridCells.Adaptive(minSize = 150.dp),
+      verticalArrangement = Arrangement.spacedBy(10.dp),
+      horizontalArrangement = Arrangement.spacedBy(10.dp),
+      contentPadding = PaddingValues(bottom = 24.dp),
+    ) {
+      items(brands, key = { it }) { brand ->
+        val isSelected = selectedBrand == brand
+        Surface(
+          shape = MaterialTheme.shapes.medium,
+          color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
+          modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 74.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .border(
+              width = if (isSelected) 1.5.dp else 1.dp,
+              color = if (isSelected) RacingOrange else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+              shape = MaterialTheme.shapes.medium,
+            )
+            .clickable { onSelectBrand(brand) }
+            .testTag("brand_$brand"),
         ) {
-          Icon(
-            imageVector = Icons.Rounded.DirectionsCar,
-            contentDescription = null,
-            tint = if (isSelected) RacingOrange else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp),
-          )
-          Spacer(Modifier.width(10.dp))
-          Text(
-            text = brand,
-            style = MaterialTheme.typography.titleSmall,
-          )
+          Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+          ) {
+            Icon(
+              imageVector = Icons.Rounded.DirectionsCar,
+              contentDescription = null,
+              tint = if (isSelected) RacingOrange else MaterialTheme.colorScheme.onSurfaceVariant,
+              modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+              text = brand,
+              style = MaterialTheme.typography.titleSmall,
+            )
+          }
         }
       }
     }
@@ -474,23 +598,42 @@ private fun BrandStepContent(
 private fun ModelStepContent(
   marketCode: String,
   brand: String,
+  selectedCategory: VehicleCategory?,
   selectedModelSpec: VehicleModelSpec?,
   onSelectModel: (VehicleModelSpec) -> Unit,
 ) {
-  val models = remember(marketCode, brand) { VehicleCatalogData.modelsFor(marketCode, brand) }
-  LazyColumn(
-    verticalArrangement = Arrangement.spacedBy(10.dp),
-    contentPadding = PaddingValues(bottom = 24.dp),
-  ) {
-    items(models, key = { "${it.brand}_${it.model}" }) { modelSpec ->
-      SelectorOptionCard(
-        title = "${modelSpec.brand} ${modelSpec.model}",
-        subtitle = "${modelSpec.variants.size} engine/chassis trims • ${modelSpec.years.last()}–${modelSpec.years.first()}",
-        badge = modelSpec.variants.first().chassisCode,
-        isSelected = selectedModelSpec == modelSpec,
-        tag = "model_${modelSpec.model}",
-        onClick = { onSelectModel(modelSpec) },
-      )
+  var modelFilter by remember { mutableStateOf("") }
+  val models = remember(marketCode, brand, selectedCategory, modelFilter) {
+    val base = VehicleCatalogData.modelsFor(marketCode, brand, selectedCategory)
+    if (modelFilter.isBlank()) base else base.filter {
+      it.model.contains(modelFilter.trim(), ignoreCase = true) ||
+        it.category.displayName.contains(modelFilter.trim(), ignoreCase = true)
+    }
+  }
+  Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    OutlinedTextField(
+      value = modelFilter,
+      onValueChange = { modelFilter = it },
+      placeholder = { Text("Filter $brand models…") },
+      leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+      singleLine = true,
+      shape = MaterialTheme.shapes.medium,
+      modifier = Modifier.fillMaxWidth().testTag("model_filter_input"),
+    )
+    LazyColumn(
+      verticalArrangement = Arrangement.spacedBy(10.dp),
+      contentPadding = PaddingValues(bottom = 24.dp),
+    ) {
+      items(models, key = { "${it.brand}_${it.model}" }) { modelSpec ->
+        SelectorOptionCard(
+          title = "${modelSpec.brand} ${modelSpec.model}",
+          subtitle = "${modelSpec.category.shortLabel} • ${modelSpec.variants.size} trim(s) • ${modelSpec.years.last()}–${modelSpec.years.first()}",
+          badge = modelSpec.variants.first().chassisCode,
+          isSelected = selectedModelSpec == modelSpec,
+          tag = "model_${modelSpec.model}",
+          onClick = { onSelectModel(modelSpec) },
+        )
+      }
     }
   }
 }

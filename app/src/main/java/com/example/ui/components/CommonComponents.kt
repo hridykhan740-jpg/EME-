@@ -17,15 +17,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AcUnit
+import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.DiscFull
+import androidx.compose.material.icons.rounded.DonutLarge
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.ElectricBolt
 import androidx.compose.material.icons.rounded.Engineering
+import androidx.compose.material.icons.rounded.LocalGasStation
+import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -63,11 +69,17 @@ import com.example.ui.theme.TelemetryCyan
 
 fun systemIcon(system: CatalogSystem): ImageVector = when (system) {
   CatalogSystem.ENGINE -> Icons.Rounded.Engineering
+  CatalogSystem.FUEL_AIR -> Icons.Rounded.LocalGasStation
   CatalogSystem.TRANSMISSION -> Icons.Rounded.Settings
+  CatalogSystem.CLUTCH -> Icons.Rounded.DonutLarge
   CatalogSystem.SUSPENSION -> Icons.Rounded.Tune
-  CatalogSystem.ELECTRICAL -> Icons.Rounded.ElectricBolt
+  CatalogSystem.STEERING -> Icons.Rounded.Navigation
   CatalogSystem.BRAKES -> Icons.Rounded.DiscFull
-  CatalogSystem.BODY -> Icons.Rounded.DirectionsCar
+  CatalogSystem.COOLING -> Icons.Rounded.Thermostat
+  CatalogSystem.AC_HVAC -> Icons.Rounded.AcUnit
+  CatalogSystem.ELECTRICAL -> Icons.Rounded.ElectricBolt
+  CatalogSystem.EXHAUST -> Icons.Rounded.Air
+  CatalogSystem.BODY_INTERIOR -> Icons.Rounded.DirectionsCar
 }
 
 @Composable

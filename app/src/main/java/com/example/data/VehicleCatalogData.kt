@@ -1,6 +1,7 @@
 package com.example.data
 
 import com.example.model.Powertrain
+import com.example.model.VehicleCategory
 
 data class MarketSpec(
   val country: String,
@@ -18,6 +19,7 @@ data class VehicleVariantSpec(
 data class VehicleModelSpec(
   val brand: String,
   val model: String,
+  val category: VehicleCategory,
   val marketCodes: List<String>,
   val years: List<Int>,
   val variants: List<VehicleVariantSpec>,
@@ -26,7 +28,7 @@ data class VehicleModelSpec(
 object VehicleCatalogData {
 
   val markets: List<MarketSpec> = listOf(
-    MarketSpec("Bangladesh", "BD", "South Asia • Priority Market", "Dhaka/BD severe traffic, high-humidity cooling & JDM/CKD specs"),
+    MarketSpec("Bangladesh", "BD", "South Asia • Complete Fleet", "All private cars, SUVs, MPVs & commercial trucks/buses in BD"),
     MarketSpec("Japan", "JDM", "Asia-Pacific", "Right-hand drive & strict Shaken inspection specs"),
     MarketSpec("India", "IND", "South Asia", "BS6 Phase-2 dust-hardened & high-ambient cooling specs"),
     MarketSpec("ASEAN (TH / ID / MY)", "ASEAN", "Southeast Asia", "Tropical heavy-duty HVAC & diesel/hybrid specs"),
@@ -35,344 +37,258 @@ object VehicleCatalogData {
     MarketSpec("Germany / Europe", "EDM", "Europe", "Euro 6d & LongLife extended service specs"),
   )
 
-  val models: List<VehicleModelSpec> = listOf(
-    // TOYOTA (Bangladesh & Asia Priority)
+  private val commercialAndGlobalVehicles: List<VehicleModelSpec> = listOf(
+    // COMMERCIAL TRUCKS, PICKUPS & BUSES IN BANGLADESH
     VehicleModelSpec(
       brand = "Toyota",
-      model = "Corolla Axio",
-      marketCodes = listOf("BD", "JDM"),
-      years = (2012..2025).toList().reversed(),
+      model = "Hilux",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "ASEAN", "JDM", "EDM"),
+      years = (2012..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("1.5L Hybrid G / EX eCVT (NKE165 1NZ-FXE)", Powertrain.HYBRID, "NKE165"),
-        VehicleVariantSpec("1.5L X / G Super CVT-i (NZE161 1NZ-FE)", Powertrain.PETROL, "NZE161"),
-        VehicleVariantSpec("1.3L / 1.5L Dual VVT-i (NZE141 / NRE160)", Powertrain.PETROL, "NZE141"),
+        VehicleVariantSpec("2.8L 1GD-FTV Revo 4x4 6AT/6MT (GUN126)", Powertrain.DIESEL, "GUN126"),
+        VehicleVariantSpec("2.4L 2GD-FTV Double Cab 4x4 (GUN125)", Powertrain.DIESEL, "GUN125"),
       ),
     ),
     VehicleModelSpec(
       brand = "Toyota",
-      model = "Corolla Fielder",
-      marketCodes = listOf("BD", "JDM"),
-      years = (2012..2025).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L Hybrid G / WxB eCVT (NKE165G)", Powertrain.HYBRID, "NKE165G"),
-        VehicleVariantSpec("1.5L 1NZ-FE / 2NR-FKE Wagon CVT (NZE161G)", Powertrain.PETROL, "NZE161G"),
-        VehicleVariantSpec("1.8L 2ZR-FAE Aerotourer CVT (ZRE162G)", Powertrain.PETROL, "ZRE162G"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Toyota",
-      model = "Premio",
-      marketCodes = listOf("BD", "JDM"),
-      years = (2010..2022).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L F-EX Package 1NZ-FE Super CVT-i (NZT260)", Powertrain.PETROL, "NZT260"),
-        VehicleVariantSpec("1.8L X-EX Package 2ZR-FAE Valvematic (ZRT260)", Powertrain.PETROL, "ZRT260"),
-        VehicleVariantSpec("2.0L G Superior 3ZR-FAE (ZRT261)", Powertrain.PETROL, "ZRT261"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Toyota",
-      model = "Allion",
-      marketCodes = listOf("BD", "JDM"),
-      years = (2010..2022).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L A15 G-Plus 1NZ-FE CVT (NZT260)", Powertrain.PETROL, "NZT260"),
-        VehicleVariantSpec("1.8L A18 G Package 2ZR-FAE (ZRT260)", Powertrain.PETROL, "ZRT260"),
-        VehicleVariantSpec("2.0L A20 S Package 3ZR-FAE (ZRT261)", Powertrain.PETROL, "ZRT261"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Toyota",
-      model = "Noah",
+      model = "Dyna",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
       marketCodes = listOf("BD", "JDM", "ASEAN"),
+      years = (2010..2025).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("4.0L N04C-T / 3.0L 1KD-FTV Light Commercial Truck (XZU / KDY)", Powertrain.DIESEL, "XZU600"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Mitsubishi",
+      model = "L200",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "ASEAN", "JDM", "EDM"),
       years = (2014..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("1.8L Hybrid Si / WxB eCVT (ZWR80 / ZWR90)", Powertrain.HYBRID, "ZWR80"),
-        VehicleVariantSpec("2.0L 3ZR-FAE Valvematic Petrol CVT (ZRR80)", Powertrain.PETROL, "ZRR80"),
+        VehicleVariantSpec("2.4L 4N15 / 2.5L 4D56 Triton Pickup 4WD (KL1T / KK1T)", Powertrain.DIESEL, "KL1T"),
       ),
     ),
     VehicleModelSpec(
-      brand = "Toyota",
-      model = "HiAce",
+      brand = "Mitsubishi",
+      model = "Fuso Canter",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "JDM", "ASEAN"),
+      years = (2010..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("3.0L 4P10 / 4.9L 4M50 Cargo Truck (FE70 / FE83 / FEB)", Powertrain.DIESEL, "FE70"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Tata",
+      model = "Ace",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2012..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("702cc / 800cc DICOR Mini Pickup (EX2 / Gold)", Powertrain.DIESEL, "ACE-GOLD"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Tata",
+      model = "Intra",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2019..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("1.4L / 1.5L DI Compact Truck (V10 / V30 / V50)", Powertrain.DIESEL, "INTRA-V30"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Tata",
+      model = "Xenon",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND", "ASEAN"),
+      years = (2012..2025).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("2.2L / 3.0L DICOR Double/Single Cab Pickup (Y2)", Powertrain.DIESEL, "XENON-Y2"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Tata",
+      model = "LPT 1615 / 1109",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2010..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("5.9L Cummins 6BT / 3.8L 497 TCIC Heavy Cargo Truck", Powertrain.DIESEL, "LPT1615"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Tata",
+      model = "Prima",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2014..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("6.7L Cummins ISBe Prime Mover / Tipper (4928 / 2528K)", Powertrain.DIESEL, "PRIMA-LX"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Ashok Leyland",
+      model = "Dost",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2013..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("1.5L P15 TDCR LCV Pickup (Dost+ / Bada Dost)", Powertrain.DIESEL, "DOST-LCV"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Ashok Leyland",
+      model = "Ecomet",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2012..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("3.8L H-Series 4CTI Medium Truck (1015 / 1215 / 1615)", Powertrain.DIESEL, "ECOMET-1615"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Ashok Leyland",
+      model = "Viking",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2010..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("5.8L H-Series 6DTI Highway Bus Chassis (222-WB)", Powertrain.DIESEL, "VIKING-BUS"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Mahindra",
+      model = "Bolero Pickup",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2012..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("2.5L m2DiCR 4-Cyl FB / Maxx Pik-Up", Powertrain.DIESEL, "BOLERO-PU"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Mahindra",
+      model = "Jeeto",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
+      years = (2015..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("625cc m_Dura Mini Van / Pickup (Plus / Strong)", Powertrain.DIESEL, "JEETO-X7"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Isuzu",
+      model = "D-Max",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "ASEAN", "JDM", "EDM"),
+      years = (2013..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("1.9L RZ4E / 3.0L 4JJ3-TCX 4x4 Pickup (RG01)", Powertrain.DIESEL, "RG01"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Isuzu",
+      model = "N-Series",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "JDM", "ASEAN", "USDM"),
+      years = (2010..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("3.0L 4JJ1 / 5.2L 4HK1 Elf Cargo Truck (NKR / NPR / NLR)", Powertrain.DIESEL, "NKR85"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Hino",
+      model = "AK1J",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "JDM", "ASEAN"),
+      years = (2010..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("7.7L J08C / J08E Front-Engine Intercity Bus Chassis", Powertrain.DIESEL, "AK1JR"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Hino",
+      model = "RM2",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "ASEAN", "JDM"),
+      years = (2014..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("8.9L A09C / E13C Rear-Engine AC Coach Chassis", Powertrain.DIESEL, "RM2PSS"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Hino",
+      model = "300 / 500 Series",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
       marketCodes = listOf("BD", "JDM", "ASEAN", "IND"),
       years = (2012..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("2.7L 2TR-FE Petrol Super GL 6AT (TRH200 / TRH214)", Powertrain.PETROL, "TRH200"),
-        VehicleVariantSpec("2.8L 1GD-FTV Turbo Diesel DX/GL 6AT (GDH200)", Powertrain.DIESEL, "GDH200"),
-        VehicleVariantSpec("3.0L 1KD-FTV D-4D Commuter (KDH200)", Powertrain.DIESEL, "KDH200"),
+        VehicleVariantSpec("4.0L N04C Dutro 300 / 7.7L J08E Ranger 500 (XZU / FC9J)", Powertrain.DIESEL, "FC9J"),
       ),
     ),
     VehicleModelSpec(
-      brand = "Toyota",
-      model = "Land Cruiser Prado",
-      marketCodes = listOf("BD", "JDM", "ASEAN", "EDM"),
+      brand = "Eicher",
+      model = "Pro 2049 / 3015 / Skyline",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "IND"),
       years = (2014..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("2.7L 2TR-FE TX-L Petrol 6AT 4WD (TRJ150W)", Powertrain.PETROL, "TRJ150"),
-        VehicleVariantSpec("2.8L 1GD-FTV TZ-G Clean Diesel 6AT/8AT (GDJ150 / GDJ250)", Powertrain.DIESEL, "GDJ150"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Toyota",
-      model = "Camry",
-      marketCodes = listOf("BD", "JDM", "USDM", "ASEAN", "EDM", "IND"),
-      years = (2018..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.5L Dynamic Force Hybrid eCVT (AXVH70)", Powertrain.HYBRID, "XV70"),
-        VehicleVariantSpec("2.5L I4 8-Speed Direct-Shift AT (AXVA70)", Powertrain.PETROL, "XV70"),
-        VehicleVariantSpec("3.5L V6 8AT XSE (GSV70)", Powertrain.PETROL, "XV70"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Toyota",
-      model = "Corolla / Corolla Cross",
-      marketCodes = listOf("BD", "JDM", "USDM", "ASEAN", "EDM", "IND"),
-      years = (2019..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.8L Hybrid E-CVT (ZWE211 / ZVG11)", Powertrain.HYBRID, "E210"),
-        VehicleVariantSpec("2.0L Dynamic Force CVT (MZEA12)", Powertrain.PETROL, "E210"),
-        VehicleVariantSpec("1.2L Turbo 6MT / Super CVT-i (NRE210)", Powertrain.PETROL, "E210"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Toyota",
-      model = "Hilux / Fortuner",
-      marketCodes = listOf("BD", "ASEAN", "JDM", "IND", "EDM"),
-      years = (2016..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.8L 1GD-FTV Turbo Diesel 4x4 6AT", Powertrain.DIESEL, "AN120"),
-        VehicleVariantSpec("2.4L 2GD-FTV Diesel 6MT", Powertrain.DIESEL, "AN120"),
-        VehicleVariantSpec("2.7L 2TR-FE VVT-i Petrol 6AT", Powertrain.PETROL, "AN120"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Toyota",
-      model = "Prius",
-      marketCodes = listOf("BD", "JDM", "USDM", "EDM"),
-      years = (2016..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.8L 2ZR-FXE Hybrid E-Four (ZVW50 / ZVW55)", Powertrain.HYBRID, "XW50"),
-        VehicleVariantSpec("2.0L Series-Parallel Hybrid eCVT (MXWH60)", Powertrain.HYBRID, "XW60"),
+        VehicleVariantSpec("2.0L / 3.8L E474 Volvo-Tech Diesel Truck & Bus", Powertrain.DIESEL, "PRO-3015"),
       ),
     ),
 
-    // HONDA (Bangladesh & Asia Priority)
+    // ADDITIONAL REGIONAL / GLOBAL EV & EURO VEHICLES
     VehicleModelSpec(
-      brand = "Honda",
-      model = "Vezel / HR-V",
-      marketCodes = listOf("BD", "JDM", "ASEAN"),
-      years = (2014..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L i-DCD Hybrid RS / Z Sensing 7DCT (RU3)", Powertrain.HYBRID, "RU3"),
-        VehicleVariantSpec("1.5L e:HEV Z / Play Hybrid (RV5)", Powertrain.HYBRID, "RV5"),
-        VehicleVariantSpec("1.5L i-VTEC CVT (RU1)", Powertrain.PETROL, "RU1"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Honda",
-      model = "Grace",
-      marketCodes = listOf("BD", "JDM"),
-      years = (2014..2022).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L Sport Hybrid i-DCD EX / LX 7DCT (GM4)", Powertrain.HYBRID, "GM4"),
-        VehicleVariantSpec("1.5L Earth Dreams i-VTEC CVT (GM6)", Powertrain.PETROL, "GM6"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Honda",
-      model = "Civic",
-      marketCodes = listOf("BD", "JDM", "USDM", "ASEAN", "EDM"),
-      years = (2017..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L VTEC Turbo CVT (FC1 / FE1 / FL1)", Powertrain.PETROL, "FE/FL"),
-        VehicleVariantSpec("2.0L e:HEV i-MMD Hybrid (FL4)", Powertrain.HYBRID, "FL4"),
-        VehicleVariantSpec("2.0L K20C1 Type R 6MT (FL5)", Powertrain.PETROL, "FL5"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Honda",
-      model = "CR-V",
-      marketCodes = listOf("BD", "JDM", "USDM", "ASEAN", "IND", "EDM"),
-      years = (2018..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L VTEC Turbo AWD CVT (RW2 / RS4)", Powertrain.PETROL, "RW"),
-        VehicleVariantSpec("2.0L e:HEV AWD Hybrid (RS6)", Powertrain.HYBRID, "RS"),
-        VehicleVariantSpec("1.6L i-DTEC Diesel 9AT (IND/ASEAN)", Powertrain.DIESEL, "RW"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Honda",
-      model = "City",
-      marketCodes = listOf("BD", "IND", "ASEAN", "JDM"),
-      years = (2018..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L i-VTEC DOHC CVT / 6MT (GN2)", Powertrain.PETROL, "GN2"),
-        VehicleVariantSpec("1.5L e:HEV Strong Hybrid (GN5)", Powertrain.HYBRID, "GN5"),
-      ),
-    ),
-
-    // MITSUBISHI (Bangladesh & Asia Priority)
-    VehicleModelSpec(
-      brand = "Mitsubishi",
-      model = "Outlander",
-      marketCodes = listOf("BD", "JDM", "ASEAN", "USDM", "EDM"),
-      years = (2015..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.0L / 2.4L MIVEC 7-Seater 4WD CVT (GF7W / GF8W)", Powertrain.PETROL, "GF8W"),
-        VehicleVariantSpec("2.4L Twin-Motor PHEV 4WD (GG3W / GN0W)", Powertrain.HYBRID, "GG3W"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Mitsubishi",
-      model = "Pajero Sport",
-      marketCodes = listOf("BD", "ASEAN", "JDM"),
-      years = (2016..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.4L 4N15 MIVEC Clean Diesel 8AT Super Select 4WD", Powertrain.DIESEL, "KS1W"),
-        VehicleVariantSpec("3.0L 6B31 MIVEC V6 Petrol 8AT", Powertrain.PETROL, "KS5W"),
-      ),
-    ),
-
-    // NISSAN
-    VehicleModelSpec(
-      brand = "Nissan",
-      model = "X-Trail / Note e-POWER",
-      marketCodes = listOf("BD", "JDM", "USDM", "ASEAN", "EDM"),
-      years = (2016..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.0L MR20DD 7-Seater 4WD Xtronic (NT32 / T32)", Powertrain.PETROL, "T32"),
-        VehicleVariantSpec("1.5L VC-Turbo e-POWER e-4ORCE (T33)", Powertrain.HYBRID, "T33"),
-        VehicleVariantSpec("1.2L HR12DE e-POWER (HE12 / E13 Note)", Powertrain.HYBRID, "E12/E13"),
-      ),
-    ),
-
-    // HYUNDAI
-    VehicleModelSpec(
-      brand = "Hyundai",
-      model = "Tucson",
-      marketCodes = listOf("BD", "KDM", "USDM", "EDM", "IND", "ASEAN"),
+      brand = "Tata",
+      model = "Nexon / Harrier / Tiago",
+      category = VehicleCategory.SUVS_CROSSOVERS_4X4,
+      marketCodes = listOf("BD", "IND"),
       years = (2020..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("1.6L T-GDi HEV Hybrid 6AT AWD (NX4)", Powertrain.HYBRID, "NX4"),
-        VehicleVariantSpec("2.0L Nu MPi / Smartstream 6AT (TL / NX4)", Powertrain.PETROL, "NX4"),
-        VehicleVariantSpec("2.0L R-Engine CRDi Diesel 8AT", Powertrain.DIESEL, "NX4"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Hyundai",
-      model = "Creta / Alcazar",
-      marketCodes = listOf("BD", "IND", "ASEAN", "KDM"),
-      years = (2020..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L MPi Smartstream IVT (SU2)", Powertrain.PETROL, "SU2"),
-        VehicleVariantSpec("1.5L T-GDi Turbo 7DCT (SU2)", Powertrain.PETROL, "SU2"),
-        VehicleVariantSpec("1.5L U2 CRDi Diesel 6AT / 6MT", Powertrain.DIESEL, "SU2"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Hyundai",
-      model = "Ioniq 5",
-      marketCodes = listOf("KDM", "USDM", "EDM", "ASEAN", "IND", "JDM", "BD"),
-      years = (2021..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("77.4 kWh Long Range AWD Dual-Motor (NE1)", Powertrain.EV, "E-GMP"),
-        VehicleVariantSpec("58 kWh Standard Range RWD (NE1)", Powertrain.EV, "E-GMP"),
-      ),
-    ),
-
-    // SUZUKI / MARUTI SUZUKI
-    VehicleModelSpec(
-      brand = "Suzuki / Maruti",
-      model = "Swift / Baleno",
-      marketCodes = listOf("BD", "JDM", "IND", "ASEAN", "EDM"),
-      years = (2018..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.2L Z12E / K12N DualJet 5MT / AMT / CVT", Powertrain.PETROL, "ZC/WB"),
-        VehicleVariantSpec("1.2L Mild Hybrid SHVS CVT (JDM / BD)", Powertrain.HYBRID, "ZCEDS"),
+        VehicleVariantSpec("1.2L Revotron Turbo Petrol 7DCA", Powertrain.PETROL, "X1"),
+        VehicleVariantSpec("1.5L Revotorq / 2.0L Kryotec Diesel 6AT", Powertrain.DIESEL, "O5"),
+        VehicleVariantSpec("45 kWh Nexon.ev LR Ziptron", Powertrain.EV, "X1-EV"),
       ),
     ),
     VehicleModelSpec(
       brand = "Suzuki / Maruti",
       model = "Grand Vitara / Jimny",
+      category = VehicleCategory.SUVS_CROSSOVERS_4X4,
       marketCodes = listOf("BD", "JDM", "IND", "ASEAN", "EDM"),
       years = (2019..2026).toList().reversed(),
       variants = listOf(
         VehicleVariantSpec("1.5L K15C Smart Hybrid AllGrip 6AT", Powertrain.HYBRID, "YFG"),
-        VehicleVariantSpec("1.5L Intelligent Electric Hybrid eCVT", Powertrain.HYBRID, "YFG"),
         VehicleVariantSpec("1.5L K15B Jimny 4WD 5MT / 4AT (JB74)", Powertrain.PETROL, "JB74"),
       ),
     ),
-
-    // TATA (Bangladesh & India)
     VehicleModelSpec(
-      brand = "Tata",
-      model = "Nexon / Harrier / Tiago",
-      marketCodes = listOf("BD", "IND"),
-      years = (2020..2026).toList().reversed(),
+      brand = "Hyundai",
+      model = "Ioniq 5",
+      category = VehicleCategory.SUVS_CROSSOVERS_4X4,
+      marketCodes = listOf("BD", "KDM", "USDM", "EDM", "ASEAN", "IND", "JDM"),
+      years = (2021..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("1.2L Revotron Turbo Petrol 7DCA / Tiago AMT", Powertrain.PETROL, "X1/X4"),
-        VehicleVariantSpec("1.5L Revotorq / 2.0L Kryotec Diesel 6AT", Powertrain.DIESEL, "O5"),
-        VehicleVariantSpec("45 kWh Nexon.ev LR Ziptron", Powertrain.EV, "X1-EV"),
-      ),
-    ),
-
-    // KIA
-    VehicleModelSpec(
-      brand = "Kia",
-      model = "Seltos / Sportage",
-      marketCodes = listOf("BD", "KDM", "IND", "USDM", "ASEAN", "EDM"),
-      years = (2020..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("1.5L Smartstream T-GDi 7DCT (SP2)", Powertrain.PETROL, "SP2/NQ5"),
-        VehicleVariantSpec("1.6L T-GDi Hybrid AWD 6AT (NQ5)", Powertrain.HYBRID, "NQ5"),
-        VehicleVariantSpec("1.5L CRDi VGT Diesel 6AT", Powertrain.DIESEL, "SP2"),
+        VehicleVariantSpec("77.4 kWh Long Range AWD Dual-Motor (NE1)", Powertrain.EV, "E-GMP"),
       ),
     ),
     VehicleModelSpec(
       brand = "Kia",
       model = "EV6",
+      category = VehicleCategory.SUVS_CROSSOVERS_4X4,
       marketCodes = listOf("KDM", "USDM", "EDM", "IND", "ASEAN"),
       years = (2022..2026).toList().reversed(),
       variants = listOf(
         VehicleVariantSpec("77.4 kWh GT-Line AWD 800V (CV1)", Powertrain.EV, "E-GMP"),
-        VehicleVariantSpec("84 kWh Long Range RWD (CV1 Facelift)", Powertrain.EV, "E-GMP"),
-      ),
-    ),
-
-    // MAZDA & SUBARU & MAHINDRA & BYD
-    VehicleModelSpec(
-      brand = "Mazda",
-      model = "CX-5 / Mazda3",
-      marketCodes = listOf("BD", "JDM", "USDM", "ASEAN", "EDM"),
-      years = (2018..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.5L Skyactiv-G AWD 6AT (KF)", Powertrain.PETROL, "KF/BP"),
-        VehicleVariantSpec("2.2L Skyactiv-D Twin-Turbo Diesel 6AT", Powertrain.DIESEL, "KF"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Subaru",
-      model = "WRX / Forester",
-      marketCodes = listOf("JDM", "USDM", "EDM"),
-      years = (2019..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.4L FA24 Boxer Turbo Symmetrical AWD (VB)", Powertrain.PETROL, "VB"),
-        VehicleVariantSpec("2.0L e-Boxer Mild Hybrid Lineartronic (SK)", Powertrain.HYBRID, "SK"),
-      ),
-    ),
-    VehicleModelSpec(
-      brand = "Mahindra",
-      model = "XUV700 / Scorpio-N",
-      marketCodes = listOf("IND", "ASEAN", "BD"),
-      years = (2021..2026).toList().reversed(),
-      variants = listOf(
-        VehicleVariantSpec("2.2L mHawk CRDi AWD 6AT", Powertrain.DIESEL, "W601"),
-        VehicleVariantSpec("2.0L mStallion TGDi Petrol 6AT", Powertrain.PETROL, "W601"),
       ),
     ),
     VehicleModelSpec(
       brand = "BYD",
       model = "Atto 3 / Seal",
+      category = VehicleCategory.SUVS_CROSSOVERS_4X4,
       marketCodes = listOf("BD", "ASEAN", "IND", "JDM", "EDM"),
       years = (2022..2026).toList().reversed(),
       variants = listOf(
@@ -380,54 +296,70 @@ object VehicleCatalogData {
         VehicleVariantSpec("82.5 kWh Seal Performance AWD", Powertrain.EV, "EK"),
       ),
     ),
-
-    // EUROPEAN & USDM
     VehicleModelSpec(
       brand = "BMW",
       model = "3 Series / X3",
-      marketCodes = listOf("EDM", "USDM", "JDM", "IND", "KDM", "BD"),
+      category = VehicleCategory.PRIVATE_SEDANS_HATCHBACKS,
+      marketCodes = listOf("BD", "EDM", "USDM", "JDM", "IND", "KDM"),
       years = (2019..2026).toList().reversed(),
       variants = listOf(
         VehicleVariantSpec("2.0L B48 TwinPower Turbo 8AT ZF (G20)", Powertrain.PETROL, "G20"),
         VehicleVariantSpec("2.0L B47 Diesel xDrive 8AT (G01)", Powertrain.DIESEL, "G01"),
-        VehicleVariantSpec("3.0L B58 M340i xDrive Mild Hybrid", Powertrain.HYBRID, "G20"),
       ),
     ),
     VehicleModelSpec(
       brand = "Volkswagen",
       model = "Golf / Tiguan",
+      category = VehicleCategory.PRIVATE_SEDANS_HATCHBACKS,
       marketCodes = listOf("EDM", "USDM", "JDM", "IND"),
       years = (2018..2026).toList().reversed(),
       variants = listOf(
         VehicleVariantSpec("2.0L EA888 TSI 7-Speed DSG (MK8)", Powertrain.PETROL, "CD1"),
-        VehicleVariantSpec("1.5L eTSI Mild Hybrid DSG", Powertrain.HYBRID, "CD1"),
-        VehicleVariantSpec("2.0L EA288 TDI Diesel 4Motion DSG", Powertrain.DIESEL, "AD1"),
       ),
     ),
     VehicleModelSpec(
       brand = "Ford",
       model = "Ranger / F-150",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
       marketCodes = listOf("USDM", "ASEAN", "EDM"),
       years = (2019..2026).toList().reversed(),
       variants = listOf(
         VehicleVariantSpec("2.0L Bi-Turbo EcoBlue Diesel 10AT", Powertrain.DIESEL, "P703"),
-        VehicleVariantSpec("3.5L EcoBoost PowerBoost Full Hybrid 10AT", Powertrain.HYBRID, "P702"),
-        VehicleVariantSpec("2.7L EcoBoost V6 10R80", Powertrain.PETROL, "P702"),
       ),
     ),
   )
 
-  fun brandsForMarket(marketCode: String): List<String> {
+  val models: List<VehicleModelSpec> =
+    BdPassengerVehicles.sedansAndHatchbacks +
+      BdPassengerVehicles.suvsAnd4x4s +
+      BdPassengerVehicles.microbusesMpvsAndVans +
+      commercialAndGlobalVehicles
+
+  fun brandsForMarket(marketCode: String, category: VehicleCategory? = null): List<String> {
     val matched = models
-      .filter { it.marketCodes.contains(marketCode) }
+      .filter { spec ->
+        spec.marketCodes.contains(marketCode) && (category == null || spec.category == category)
+      }
       .map { it.brand }
       .distinct()
       .sorted()
-    return matched.ifEmpty { models.map { it.brand }.distinct().sorted() }
+    return matched.ifEmpty {
+      models
+        .filter { category == null || it.category == category }
+        .map { it.brand }
+        .distinct()
+        .sorted()
+    }
   }
 
-  fun modelsFor(marketCode: String, brand: String): List<VehicleModelSpec> {
-    val marketFiltered = models.filter { it.brand == brand && it.marketCodes.contains(marketCode) }
-    return marketFiltered.ifEmpty { models.filter { it.brand == brand } }
+  fun modelsFor(marketCode: String, brand: String, category: VehicleCategory? = null): List<VehicleModelSpec> {
+    val marketFiltered = models.filter {
+      it.brand == brand &&
+        it.marketCodes.contains(marketCode) &&
+        (category == null || it.category == category)
+    }
+    return marketFiltered.ifEmpty {
+      models.filter { it.brand == brand && (category == null || it.category == category) }
+    }
   }
 }

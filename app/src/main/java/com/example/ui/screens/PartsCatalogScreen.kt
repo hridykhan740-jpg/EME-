@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,33 +26,31 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Layers
+import androidx.compose.material.icons.rounded.PictureAsPdf
+import androidx.compose.material.icons.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +62,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -72,9 +72,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.local.LocalPdfCartItemEntity
 import com.example.model.CatalogPart
 import com.example.model.CatalogSystem
 import com.example.model.DistanceUnit
+import com.example.model.PartSubComponent
 import com.example.model.SavedPart
 import com.example.model.UserVehicle
 import com.example.ui.components.ActiveVehicleBanner
@@ -82,12 +84,10 @@ import com.example.ui.components.PartVisualIdentifier
 import com.example.ui.components.StockStatusBadge
 import com.example.ui.components.systemAccentColor
 import com.example.ui.components.systemIcon
-import com.example.ui.theme.OemEmerald
 import com.example.ui.theme.RacingOrange
 import com.example.ui.theme.TelemetryCyan
 import com.example.viewmodel.AiPartVerificationState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PartsCatalogScreen(
   vehicle: UserVehicle?,
@@ -95,6 +95,7 @@ fun PartsCatalogScreen(
   allParts: List<CatalogPart>,
   filteredParts: List<CatalogPart>,
   savedParts: List<SavedPart>,
+  pdfCartItems: List<LocalPdfCartItemEntity>,
   selectedSystem: CatalogSystem?,
   searchQuery: String,
   inStockOnly: Boolean,
@@ -110,9 +111,15 @@ fun PartsCatalogScreen(
   onPartInspected: (CatalogPart) -> Unit,
   onVerifyPartWithAi: (CatalogPart) -> Unit,
   onResetAiPartState: () -> Unit,
+  onAddAssemblyToPdf: (CatalogPart) -> Unit,
+  onAddSubPartToPdf: (CatalogPart, PartSubComponent) -> Unit,
+  onRemovePdfItem: (String) -> Unit,
+  onClearPdfList: () -> Unit,
+  onExportPdfShare: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   var inspectedPart by remember { mutableStateOf<CatalogPart?>(null) }
+  var showPdfSheet by remember { mutableStateOf(false) }
   val keyboardController = LocalSoftwareKeyboardController.current
 
   val openPartDetail: (CatalogPart) -> Unit = { part ->
@@ -134,6 +141,9 @@ fun PartsCatalogScreen(
   val savedByPartId = remember(savedParts) {
     savedParts.associateBy { it.partId }
   }
+  val totalSubParts = remember(allParts) {
+    allParts.sumOf { it.subComponents.size }
+  }
 
   Box(
     modifier = modifier.fillMaxSize(),
@@ -148,7 +158,6 @@ fun PartsCatalogScreen(
       verticalArrangement = Arrangement.spacedBy(12.dp),
       horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-      // Active Vehicle Fitment Banner
       item(span = { GridItemSpan(maxLineSpan) }) {
         ActiveVehicleBanner(
           vehicle = vehicle,
@@ -157,18 +166,17 @@ fun PartsCatalogScreen(
         )
       }
 
-      // Studio Banner
       item(span = { GridItemSpan(maxLineSpan) }) {
         Box(
           modifier = Modifier
             .fillMaxWidth()
-            .height(118.dp)
+            .height(114.dp)
             .clip(MaterialTheme.shapes.large)
             .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f), MaterialTheme.shapes.large),
         ) {
           Image(
             painter = painterResource(id = R.drawable.img_vehicle_garage_banner),
-            contentDescription = "Verified OEM and aftermarket components",
+            contentDescription = "Verified OEM and sub-component assemblies",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
           )
@@ -190,13 +198,13 @@ fun PartsCatalogScreen(
               .padding(horizontal = 16.dp),
           ) {
             Text(
-              text = "Interactive Parts Catalog",
+              text = "EPC Exploded Parts Catalog",
               style = MaterialTheme.typography.titleLarge,
               color = Color.White,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-              text = "${allParts.size} Verified OEM & Aftermarket SKUs across 6 vehicle systems",
+              text = "${allParts.size} Assemblies & $totalSubParts Sub-Parts across 12 Vehicle Systems",
               style = MaterialTheme.typography.bodySmall,
               color = Color(0xFFCBD5E1),
             )
@@ -204,13 +212,13 @@ fun PartsCatalogScreen(
         }
       }
 
-      // Indexed Search Input + Stock Filter
+      // Indexed Search Input + Stock Filter + PDF Export Button
       item(span = { GridItemSpan(maxLineSpan) }) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
-            placeholder = { Text("Search part name, OEM #, Denso/Brembo SKU…") },
+            placeholder = { Text("Search assembly, sub-part, OEM # (e.g. O-ring, 90915)…") },
             leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
             trailingIcon = {
               if (searchQuery.isNotEmpty()) {
@@ -236,33 +244,46 @@ fun PartsCatalogScreen(
           Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
           ) {
             Text(
-              text = "${filteredParts.size} matching parts",
+              text = "${filteredParts.size} assemblies",
               style = MaterialTheme.typography.labelMedium,
               color = MaterialTheme.colorScheme.onSurfaceVariant,
+              modifier = Modifier.weight(1f),
             )
             FilterChip(
               selected = inStockOnly,
               onClick = onToggleInStockOnly,
-              label = { Text("In Stock Only") },
+              label = { Text("In Stock") },
               leadingIcon = if (inStockOnly) {
                 { Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) }
               } else null,
               modifier = Modifier.testTag("catalog_in_stock_filter"),
             )
+            Button(
+              onClick = { showPdfSheet = true },
+              colors = ButtonDefaults.buttonColors(
+                containerColor = if (pdfCartItems.isNotEmpty()) RacingOrange else MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = if (pdfCartItems.isNotEmpty()) Color.White else MaterialTheme.colorScheme.onSurface,
+              ),
+              shape = RoundedCornerShape(10.dp),
+              modifier = Modifier.heightIn(min = 48.dp).testTag("open_pdf_sheet_button"),
+            ) {
+              Icon(Icons.Rounded.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+              Spacer(Modifier.width(6.dp))
+              Text("PDF (${pdfCartItems.size})")
+            }
           }
         }
       }
 
-      // System-Based Hierarchy Selector
+      // 12-System Hierarchy Selector
       item(span = { GridItemSpan(maxLineSpan) }) {
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           item {
             SystemHierarchyChip(
-              label = "All Systems",
-              code = "ALL",
+              label = "All 12 Systems",
               count = allParts.size,
               accent = RacingOrange,
               selected = selectedSystem == null,
@@ -275,7 +296,6 @@ fun PartsCatalogScreen(
             val count = allParts.count { it.system == system }
             SystemHierarchyChip(
               label = system.displayName,
-              code = system.shortCode,
               count = count,
               accent = systemAccentColor(system),
               selected = selectedSystem == system,
@@ -307,7 +327,7 @@ fun PartsCatalogScreen(
               )
               Text("No parts match your filter", style = MaterialTheme.typography.titleMedium)
               Text(
-                "Clear the search query or switch back to All Systems to inspect the full inventory.",
+                "Clear the search query or switch back to All 12 Systems to inspect full assemblies and sub-components.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
               )
@@ -327,6 +347,8 @@ fun PartsCatalogScreen(
               openPartDetail(part)
             },
             onToggleSave = { onToggleSavePart(part, savedRecord?.id) },
+            onAddAssemblyToPdf = { onAddAssemblyToPdf(part) },
+            onAddSubPartToPdf = { sub -> onAddSubPartToPdf(part, sub) },
           )
         }
       }
@@ -344,7 +366,21 @@ fun PartsCatalogScreen(
       aiPartState = aiPartState,
       onVerifyWithAi = { onVerifyPartWithAi(activeDetail) },
       onToggleSave = { onToggleSavePart(activeDetail, savedRecord?.id) },
+      onAddAssemblyToPdf = { onAddAssemblyToPdf(activeDetail) },
+      onAddSubPartToPdf = { sub -> onAddSubPartToPdf(activeDetail, sub) },
       onDismiss = { inspectedPart = null },
+    )
+  }
+
+  if (showPdfSheet) {
+    BackHandler { showPdfSheet = false }
+    PdfPartsExportSheet(
+      vehicle = vehicle,
+      items = pdfCartItems,
+      onRemoveItem = onRemovePdfItem,
+      onClearAll = onClearPdfList,
+      onExportSharePdf = onExportPdfShare,
+      onDismiss = { showPdfSheet = false },
     )
   }
 }
@@ -352,11 +388,10 @@ fun PartsCatalogScreen(
 @Composable
 private fun SystemHierarchyChip(
   label: String,
-  code: String,
   count: Int,
   accent: Color,
   selected: Boolean,
-  icon: androidx.compose.ui.graphics.vector.ImageVector?,
+  icon: ImageVector?,
   tag: String,
   onClick: () -> Unit,
 ) {
@@ -407,8 +442,12 @@ private fun CatalogPartCard(
   isSaved: Boolean,
   onCardClick: () -> Unit,
   onToggleSave: () -> Unit,
+  onAddAssemblyToPdf: () -> Unit,
+  onAddSubPartToPdf: (PartSubComponent) -> Unit,
 ) {
   val accent = systemAccentColor(part.system)
+  var expandedBreakdown by remember(part.id) { mutableStateOf(false) }
+
   Surface(
     shape = MaterialTheme.shapes.medium,
     color = MaterialTheme.colorScheme.surfaceContainer,
@@ -471,7 +510,7 @@ private fun CatalogPartCard(
       ) {
         Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
           Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("OEM #", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Main OEM #", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
               text = part.oemNumber,
               style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
@@ -501,202 +540,86 @@ private fun CatalogPartCard(
           style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
         )
       }
-    }
-  }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PartDetailModalSheet(
-  part: CatalogPart,
-  vehicle: UserVehicle?,
-  isSaved: Boolean,
-  aiPartState: AiPartVerificationState,
-  onVerifyWithAi: () -> Unit,
-  onToggleSave: () -> Unit,
-  onDismiss: () -> Unit,
-) {
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = MaterialTheme.colorScheme.surface,
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .verticalScroll(rememberScrollState())
-        .padding(horizontal = 20.dp)
-        .padding(bottom = 28.dp),
-      verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-      Row(verticalAlignment = Alignment.CenterVertically) {
-        PartVisualIdentifier(
-          visualKind = part.visualKind,
-          system = part.system,
-          size = 76.dp,
-        )
-        Spacer(Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-          Text(
-            text = "${part.system.displayName} / ${part.subSystem}",
-            style = MaterialTheme.typography.labelMedium,
-            color = systemAccentColor(part.system),
-          )
-          Spacer(Modifier.height(4.dp))
-          Text(text = part.name, style = MaterialTheme.typography.titleLarge)
-        }
-      }
-
+      // Expandable Micro-Level Sub-Component Drawer + Add to PDF
       Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        StockStatusBadge(status = part.stockStatus, qty = part.warehouseQty)
-        Text(
-          text = "${part.dispatchSla}  •  $${"%.2f".format(part.priceUsd)}",
-          style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        )
-      }
-
-      HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-      DetailInfoBlock(label = "OEM Part Number (${part.oemManufacturer})", value = part.oemNumber, accent = TelemetryCyan)
-      DetailInfoBlock(label = "Verified Aftermarket (${part.aftermarketBrand})", value = part.aftermarketNumber)
-      DetailInfoBlock(label = "Technical Specification", value = part.specSummary)
-      DetailInfoBlock(
-        label = "Fitment Verification",
-        value = part.fitmentNotes,
-        accent = OemEmerald,
-        leadingIcon = Icons.Rounded.Verified,
-      )
-
-      if (vehicle != null) {
-        Text(
-          text = "Confirmed for ${vehicle.shortTitle()} (${vehicle.marketCode})",
-          style = MaterialTheme.typography.bodySmall,
-          color = OemEmerald,
-        )
-      }
-
-      // Firebase AI Logic Official OEM Verification Card
-      OutlinedButton(
-        onClick = onVerifyWithAi,
-        enabled = aiPartState !is AiPartVerificationState.Loading,
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-          .fillMaxWidth()
-          .heightIn(min = 50.dp)
-          .testTag("verify_part_ai_button"),
-      ) {
-        if (aiPartState is AiPartVerificationState.Loading && aiPartState.partId == part.id) {
-          CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-          Spacer(Modifier.width(8.dp))
-          Text("Verifying OEM Spec with AI…")
-        } else {
-          Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = TelemetryCyan, modifier = Modifier.size(18.dp))
-          Spacer(Modifier.width(8.dp))
-          Text("Verify Official OEM & Interval w/ AI")
+        if (part.subComponents.isNotEmpty()) {
+          OutlinedButton(
+            onClick = { expandedBreakdown = !expandedBreakdown },
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier
+              .weight(1f)
+              .heightIn(min = 48.dp)
+              .testTag("toggle_subparts_${part.id}"),
+          ) {
+            Icon(Icons.Rounded.Layers, contentDescription = null, tint = TelemetryCyan, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(4.dp))
+            Text("Sub-Parts (${part.subComponents.size})", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.width(2.dp))
+            Icon(
+              imageVector = if (expandedBreakdown) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+              contentDescription = null,
+              modifier = Modifier.size(18.dp),
+            )
+          }
+        }
+        OutlinedButton(
+          onClick = onAddAssemblyToPdf,
+          shape = RoundedCornerShape(10.dp),
+          modifier = Modifier
+            .heightIn(min = 48.dp)
+            .testTag("add_pdf_${part.id}"),
+        ) {
+          Icon(Icons.Rounded.PlaylistAdd, contentDescription = "Add assembly to PDF", tint = RacingOrange, modifier = Modifier.size(18.dp))
+          Spacer(Modifier.width(4.dp))
+          Text("PDF")
         }
       }
 
-      when (aiPartState) {
-        is AiPartVerificationState.Success -> {
-          if (aiPartState.partId == part.id) {
-            val res = aiPartState.result
-            Surface(
-              shape = MaterialTheme.shapes.medium,
-              color = OemEmerald.copy(alpha = 0.12f),
-              modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, OemEmerald.copy(alpha = 0.4f), MaterialTheme.shapes.medium)
-                .testTag("ai_part_verification_result"),
+      AnimatedVisibility(visible = expandedBreakdown && part.subComponents.isNotEmpty()) {
+        Column(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .border(1.dp, TelemetryCyan.copy(alpha = 0.28f), RoundedCornerShape(10.dp))
+            .padding(10.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+          Text(
+            text = "Assembly Breakdown • ${part.epcCatalogRef}",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = TelemetryCyan,
+          )
+          part.subComponents.forEachIndexed { idx, sub ->
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              verticalAlignment = Alignment.CenterVertically,
             ) {
-              Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+              Column(modifier = Modifier.weight(1f)) {
+                Text("${sub.name} (${sub.quantity})", style = MaterialTheme.typography.labelMedium)
                 Text(
-                  text = "AI-Verified Manufacturer Specification",
-                  style = MaterialTheme.typography.titleSmall,
-                  color = OemEmerald,
-                )
-                Text("Official OEM #: ${res.verifiedOemNumber}", style = MaterialTheme.typography.labelLarge, color = TelemetryCyan)
-                Text("Aftermarket: ${res.aftermarketEquivalents}", style = MaterialTheme.typography.bodySmall)
-                Text(
-                  "Recommended Interval: Every ${res.officialIntervalKm} km or ${res.officialIntervalMonths} months",
-                  style = MaterialTheme.typography.labelMedium,
-                  color = RacingOrange,
-                )
-                Text(res.fitmentSummary, style = MaterialTheme.typography.bodySmall)
-                Text(
-                  "Source: ${res.manufacturerSourceNote}",
+                  text = "OEM: ${sub.oemNumber} • $${"%.2f".format(sub.priceUsd)}",
                   style = MaterialTheme.typography.labelSmall,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant,
+                  color = TelemetryCyan,
                 )
               }
+              IconButton(
+                onClick = { onAddSubPartToPdf(sub) },
+                modifier = Modifier.size(48.dp).testTag("card_add_sub_pdf_${sub.id}"),
+              ) {
+                Icon(Icons.Rounded.PlaylistAdd, contentDescription = "Add sub-component to PDF", tint = RacingOrange)
+              }
+            }
+            if (idx < part.subComponents.lastIndex) {
+              HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             }
           }
         }
-        is AiPartVerificationState.Error -> {
-          if (aiPartState.partId == part.id) {
-            Surface(
-              shape = MaterialTheme.shapes.medium,
-              color = MaterialTheme.colorScheme.errorContainer,
-              modifier = Modifier.fillMaxWidth(),
-            ) {
-              Text(
-                text = aiPartState.message,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.padding(12.dp),
-              )
-            }
-          }
-        }
-        else -> Unit
       }
-
-      Button(
-        onClick = onToggleSave,
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-          .fillMaxWidth()
-          .heightIn(min = 52.dp)
-          .testTag("detail_save_watchlist_button"),
-      ) {
-        Icon(
-          imageVector = if (isSaved) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
-          contentDescription = null,
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(if (isSaved) "Saved in Parts Watchlist" else "Save Part to Watchlist")
-      }
-    }
-  }
-}
-
-@Composable
-private fun DetailInfoBlock(
-  label: String,
-  value: String,
-  accent: Color = MaterialTheme.colorScheme.onSurface,
-  leadingIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-) {
-  Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-    Text(
-      text = label.uppercase(),
-      style = MaterialTheme.typography.labelSmall,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Row(verticalAlignment = Alignment.CenterVertically) {
-      if (leadingIcon != null) {
-        Icon(leadingIcon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(6.dp))
-      }
-      Text(
-        text = value,
-        style = MaterialTheme.typography.bodyLarge,
-        color = accent,
-      )
     }
   }
 }

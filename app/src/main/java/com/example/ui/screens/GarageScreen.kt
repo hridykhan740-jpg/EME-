@@ -54,6 +54,7 @@ import com.example.model.DistanceUnit
 import com.example.model.MaintenanceLog
 import com.example.model.SavedPart
 import com.example.model.UserVehicle
+import com.example.ui.components.DeveloperFooterCard
 import com.example.ui.components.OdometerUpdateDialog
 import com.example.ui.components.formatDistance
 import com.example.ui.theme.OemEmerald
@@ -344,6 +345,10 @@ fun GarageScreen(
             }
           }
         }
+      }
+
+      item {
+        DeveloperFooterCard()
       }
     }
   }

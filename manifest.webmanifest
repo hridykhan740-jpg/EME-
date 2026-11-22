@@ -1,0 +1,26 @@
+{
+  "name": "EME AUTOMATIC HELP • AutoPulse",
+  "short_name": "AutoPulse EME",
+  "description": "Bangladesh & Global OEM Automobile Parts Catalog, Micro Assembly Breakdown & Predictive Maintenance Hub",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+  "categories": ["auto", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "./public/assets/aistudio/IMG-20261118-WA0034_6a1f08ae.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "./public/assets/aistudio/IMG-20261118-WA0034_6a1f08ae.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

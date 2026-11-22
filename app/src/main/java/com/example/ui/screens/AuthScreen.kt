@@ -50,6 +50,7 @@ import androidx.credentials.CredentialManager
 import com.example.R
 import com.example.auth.GoogleSignInButton
 import com.example.auth.attemptAutoSignIn
+import com.example.ui.components.DeveloperFooterCard
 import com.example.ui.theme.OemEmerald
 import com.example.ui.theme.RacingOrange
 import com.example.ui.theme.TelemetryCyan
@@ -117,7 +118,7 @@ fun AuthScreen(
               style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             )
             Text(
-              text = "VEHICLE MAINTENANCE INTELLIGENCE",
+              text = "EME AUTOMATIC HELP • VEHICLE INTELLIGENCE",
               style = MaterialTheme.typography.labelSmall,
               color = TelemetryCyan,
             )
@@ -173,14 +174,14 @@ fun AuthScreen(
           OnboardingFeatureRow(
             icon = Icons.Rounded.Public,
             accent = TelemetryCyan,
-            title = "Global & Asian Spec Vehicle Selector",
-            subtitle = "JDM, KDM, IND, ASEAN, USDM & EDM makes, chassis codes & variants.",
+            title = "Complete Bangladesh & Global Fleet",
+            subtitle = "Private sedans, SUVs, MPVs & commercial trucks/buses via VIN, JDM chassis, or model.",
           )
           OnboardingFeatureRow(
             icon = Icons.Rounded.Inventory2,
             accent = RacingOrange,
-            title = "System-Indexed Parts Catalog",
-            subtitle = "Engine, Transmission, Suspension, Electrical, Brakes & Body with OEM cross-refs.",
+            title = "12-System Micro Breakdown & PDF Export",
+            subtitle = "Full EPC assemblies & individual sub-parts (seals, gaskets, bearings) with OEM cross-refs.",
           )
           OnboardingFeatureRow(
             icon = Icons.Rounded.AutoGraph,
@@ -224,6 +225,7 @@ fun AuthScreen(
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        DeveloperFooterCard()
       }
     }
   }
