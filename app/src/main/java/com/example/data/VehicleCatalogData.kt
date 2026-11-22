@@ -240,6 +240,47 @@ object VehicleCatalogData {
         VehicleVariantSpec("2.0L / 3.8L E474 Volvo-Tech Diesel Truck & Bus", Powertrain.DIESEL, "PRO-3015"),
       ),
     ),
+    VehicleModelSpec(
+      brand = "Arunima",
+      model = "Bolyan (অরোনিমা বলিয়ান)",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD"),
+      years = (2014..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("4x4 Tactical Troop Carrier & Utility Turbo Diesel (BLY-4X4)", Powertrain.DIESEL, "BLY-4X4"),
+        VehicleVariantSpec("4x4 Command / Logistics LCV Pickup (BLY-LCV)", Powertrain.DIESEL, "BLY-LCV"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Renault / TRM",
+      model = "TRM 180 (টি আর এম ১৮০)",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "EDM"),
+      years = (1998..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("TRM 180-11 4x4 MIDS 06.02.26 Turbo Diesel Tactical Truck", Powertrain.DIESEL, "TRM180-4X4"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Renault / TRM",
+      model = "TRM 240 (টি আর এম ২৪০)",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "EDM"),
+      years = (2000..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("TRM 240 4x4 / 6x6 Heavy Tactical Cargo Truck (240 HP)", Powertrain.DIESEL, "TRM240-TACT"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Renault / TRM",
+      model = "TRM 360 (টি আর এম ৩৬০)",
+      category = VehicleCategory.COMMERCIAL_TRUCKS_BUSES,
+      marketCodes = listOf("BD", "EDM"),
+      years = (2002..2026).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("TRM 360 / TRM-10000 6x6 Heavy Recovery & Artillery Prime Mover", Powertrain.DIESEL, "TRM360-6X6"),
+      ),
+    ),
 
     // ADDITIONAL REGIONAL / GLOBAL EV & EURO VEHICLES
     VehicleModelSpec(

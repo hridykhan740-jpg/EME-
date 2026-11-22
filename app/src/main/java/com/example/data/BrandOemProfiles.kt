@@ -135,6 +135,7 @@ object BrandOemProfiles {
       b.contains("mitsubishi") -> {
         val isCanter = m.contains("canter") || m.contains("l200")
         val isPajero = m.contains("pajero")
+        val isOutlander = m.contains("outlander")
         BrandOemSpec(
           oemBrand = "Mitsubishi Motors / Fuso Genuine",
           epcCatalogName = "Mitsubishi ASA / Fuso EPC",
@@ -144,25 +145,70 @@ object BrandOemProfiles {
             m.contains("canter") -> "ME013307"
             isPajero && powertrain == Powertrain.DIESEL -> "ME013307 / 1230A182"
             isPajero -> "MD352627"
+            isOutlander -> "MD360935 / MZ690070"
             powertrain == Powertrain.DIESEL -> "1230A182"
             else -> "MZ690070"
           },
           airFilterCode = when {
             m.contains("canter") -> "ME422778"
             isPajero -> "1500A608 / MR571476"
+            isOutlander -> "1500A023"
             else -> "1500A513"
           },
-          fuelFilterCode = if (powertrain == Powertrain.DIESEL) "1770A233" else "1770A260",
-          cabinFilterCode = if (isPajero) "7803A028" else "7803A043",
-          sparkCode = if (powertrain == Powertrain.DIESEL) "ME203539" else "1822A086",
-          clutchKitCode = if (isCanter || isPajero) "ME521104" else "2304A075",
-          steeringRackCode = if (isCanter) "MK383850" else if (isPajero) "4410A323" else "4410A453",
-          radiatorCode = if (isCanter) "ME403638" else if (isPajero) "1350A141" else "1350A297",
-          acCompressorCode = if (isPajero) "7813A405" else "7813A618",
+          fuelFilterCode = if (powertrain == Powertrain.DIESEL) "1770A233" else if (isOutlander) "1770A260 / MR552781" else "1770A260",
+          cabinFilterCode = if (isPajero || isOutlander) "7803A028" else "7803A043",
+          sparkCode = if (powertrain == Powertrain.DIESEL) "ME203539" else if (isOutlander) "1822A086 / MN163235" else "1822A086",
+          clutchKitCode = if (isCanter || isPajero) "ME521104" else if (isOutlander) "2304A075 / MN171120" else "2304A075",
+          steeringRackCode = if (isCanter) "MK383850" else if (isPajero) "4410A323" else if (isOutlander) "4410A453" else "4410A453",
+          radiatorCode = if (isCanter) "ME403638" else if (isPajero) "1350A141" else if (isOutlander) "1350A297" else "1350A297",
+          acCompressorCode = if (isPajero) "7813A405" else if (isOutlander) "7813A419 / 7813A618" else "7813A618",
           exhaustCatCode = "1570C312",
-          padCode = if (isPajero || isCanter) "4605A879" else "4605B005",
-          rotorCode = if (isPajero) "4615A035" else "4615A178",
+          padCode = if (isPajero || isCanter) "4605A879" else if (isOutlander) "4605A486 / 4605B005" else "4605B005",
+          rotorCode = if (isPajero) "4615A035" else if (isOutlander) "4615A075" else "4615A178",
           batterySpec = if (isPajero || isCanter) "95D31L / N100 Heavy-Duty" else "75D23L / 85D26L 12V",
+        )
+      }
+
+      b.contains("arunima") || m.contains("bolyan") -> BrandOemSpec(
+        oemBrand = "Arunima 4x4 Tactical OEM",
+        epcCatalogName = "Arunima Bolyan Workshop E-Catalog",
+        codePrefix = "ARN",
+        oilVisc = "15W-40 CI-4+ Heavy Tropical Diesel",
+        oilFilterCode = "ARN-1540-BLY01",
+        airFilterCode = "ARN-1780-BLY02",
+        fuelFilterCode = "ARN-2339-BLY03",
+        cabinFilterCode = "ARN-8713-BLY04",
+        sparkCode = "ARN-GLW-BLY24V",
+        clutchKitCode = "ARN-3121-BLY310",
+        steeringRackCode = "ARN-4410-BLY4X4",
+        radiatorCode = "ARN-1640-BLYHD",
+        acCompressorCode = "ARN-8831-BLY12V",
+        exhaustCatCode = "ARN-1741-BLYEX",
+        padCode = "ARN-4605-BLYFR",
+        rotorCode = "ARN-4351-BLYDS",
+        batterySpec = "Dual 12V / 24V N100 Tactical",
+      )
+
+      b.contains("renault") || b.contains("trm") -> {
+        val isHeavy = m.contains("240") || m.contains("360")
+        BrandOemSpec(
+          oemBrand = "Renault Trucks Defense / RVI OEM",
+          epcCatalogName = "Renault TRM Military & Heavy EPC",
+          codePrefix = "TRM",
+          oilVisc = "15W-40 ACEA E7 / API CI-4 Heavy Diesel",
+          oilFilterCode = if (isHeavy) "5001846642 / W11102" else "5001846632 / W962",
+          airFilterCode = if (isHeavy) "5000814492 / C27902" else "5000814450 / C24650",
+          fuelFilterCode = if (isHeavy) "5001846585 / WK940" else "5001846542 / WK842",
+          cabinFilterCode = "5010547120",
+          sparkCode = "5000242118-FLM",
+          clutchKitCode = if (isHeavy) "5001847380-430MM" else "5001847320-380MM",
+          steeringRackCode = "5010294412-ZF",
+          radiatorCode = if (isHeavy) "5010574360" else "5010574180",
+          acCompressorCode = "5010483240",
+          exhaustCatCode = if (isHeavy) "5010615360" else "5010615180",
+          padCode = "5001864360-HVY",
+          rotorCode = "5010422360-DRUM",
+          batterySpec = "24V Dual 6TN / N150 Military",
         )
       }
 

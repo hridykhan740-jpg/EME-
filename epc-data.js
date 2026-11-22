@@ -1,4 +1,4 @@
-// EME AUTOMATIC HELP • AutoPulse Complete BD & Global Vehicle + 1,152-Part Illustrated EPC Engine
+// EME AUTOMATIC HELP • AutoPulse Complete BD & Global Vehicle + 1,825-Part Illustrated EPC Engine
 const CATEGORIES = [
   { id: 'ALL', label: 'All BD Fleet' },
   { id: 'SEDAN', label: 'Sedans & Hatch' },
@@ -112,8 +112,13 @@ const VEHICLES = [
     { label:'Pajero V98 — 3.2L 4M41 DI-D Common-Rail Diesel 4WD (V98W)', chassis:'V98W', pt:'DIESEL' },
     { label:'Pajero Sport — 2.4L 4N15 Clean Diesel 4WD (KS1W)', chassis:'KS1W', pt:'DIESEL' }
   ]},
-  { cat:'SUV', brand:'Mitsubishi', model:'Outlander / Eclipse Cross / ASX', years:[2026,2024,2022,2020,2018], variants:[
-    { label:'2.4L MIVEC / PHEV 4WD (GF8W / GK1W / GA2W)', chassis:'GF8W', pt:'PETROL' }
+  { cat:'SUV', brand:'Mitsubishi', model:'Outlander', years:[2026,2024,2022,2020,2018,2015,2012,2009], variants:[
+    { label:'2.4L 4J12 / 2.0L 4J11 MIVEC 7-Seater 4WD (GF8W / GF7W)', chassis:'GF8W', pt:'PETROL' },
+    { label:'2.4L Twin-Motor PHEV 4WD (GG3W / GN0W)', chassis:'GG3W', pt:'HYBRID' },
+    { label:'2.4L 4B12 / 3.0L V6 6B31 S-AWC (CW5W / CW6W)', chassis:'CW5W', pt:'PETROL' }
+  ]},
+  { cat:'SUV', brand:'Mitsubishi', model:'Eclipse Cross / ASX', years:[2026,2024,2022,2020,2018], variants:[
+    { label:'1.5L Turbo / 2.0L 4B11 S-AWC (GK1W / GA2W)', chassis:'GK1W', pt:'PETROL' }
   ]},
   { cat:'SUV', brand:'Nissan', model:'X-Trail', years:[2026,2024,2022,2020,2018], variants:[
     { label:'2.0L MR20DD / 1.5L e-POWER e-4ORCE (NT32 / T33)', chassis:'NT32', pt:'HYBRID' }
@@ -162,7 +167,20 @@ const VEHICLES = [
     { label:'2.2L 4N14 Diesel 4WD / 1.5L Xpander (CV1W / NC1W)', chassis:'CV1W', pt:'DIESEL' }
   ]},
 
-  // COMMERCIAL TRUCKS, PICKUPS & BUSES
+  // COMMERCIAL TRUCKS, PICKUPS & BUSES + BANGLADESH TACTICAL FLEET
+  { cat:'COMMERCIAL', brand:'Arunima', model:'Bolyan (অরোনিমা বলিয়ান)', years:[2026,2025,2024,2022,2020,2018,2016], variants:[
+    { label:'Bolyan 4x4 Tactical Troop Carrier & Utility Diesel (BLY-4X4)', chassis:'BLY-4X4', pt:'DIESEL' },
+    { label:'Bolyan 4x4 Command / Logistics Pickup (BLY-LCV)', chassis:'BLY-LCV', pt:'DIESEL' }
+  ]},
+  { cat:'COMMERCIAL', brand:'Renault / TRM', model:'TRM 180 (টি আর এম ১৮০)', years:[2026,2024,2020,2016,2012,2006,2000], variants:[
+    { label:'TRM 180-11 4x4 MIDS 06.02.26 Turbo Diesel Tactical Truck', chassis:'TRM180-4X4', pt:'DIESEL' }
+  ]},
+  { cat:'COMMERCIAL', brand:'Renault / TRM', model:'TRM 240 (টি আর এম ২৪০)', years:[2026,2024,2020,2016,2012,2006,2000], variants:[
+    { label:'TRM 240 4x4 / 6x6 Heavy Tactical Cargo Truck (240 HP)', chassis:'TRM240-TACT', pt:'DIESEL' }
+  ]},
+  { cat:'COMMERCIAL', brand:'Renault / TRM', model:'TRM 360 (টি আর এম ৩৬০)', years:[2026,2024,2020,2016,2012,2006,2002], variants:[
+    { label:'TRM 360 / TRM-10000 6x6 Heavy Recovery & Prime Mover', chassis:'TRM360-6X6', pt:'DIESEL' }
+  ]},
   { cat:'COMMERCIAL', brand:'Toyota', model:'Hilux / Dyna', years:[2026,2024,2022,2020,2018,2015], variants:[
     { label:'2.8L 1GD-FTV Revo 4x4 / 4.0L N04C Dyna (GUN126 / XZU600)', chassis:'GUN126', pt:'DIESEL' }
   ]},
@@ -193,6 +211,8 @@ const BRAND_CODES = {
   Toyota: { epc:'Toyota EPC', oil:'90915-YZZF2', air:'17801-21060', fuel:'77024-52170', cabin:'87139-52040', pad:'04465-52320', rotor:'43512-52130', spark:'90919-01275', clutch:'31210-12281', rack:'45510-12450', rad:'16400-21300', ac:'88310-02710', exh:'17410-21B30' },
   Honda: { epc:'Honda EPC', oil:'15400-RTA-003', air:'17220-5R0-008', fuel:'17048-T7A-000', cabin:'80291-T5A-J01', pad:'45022-T7J-H00', rotor:'45251-T7A-000', spark:'12290-5R0-003', clutch:'22105-RNA-305', rack:'53601-T7J-H01', rad:'19010-5R0-003', ac:'38810-5R8-J01', exh:'18160-5R0-000' },
   Mitsubishi: { epc:'Mitsubishi ASA / Fuso EPC', oil:'MZ690070', air:'1500A513', fuel:'1770A233', cabin:'7803A043', pad:'4605B005', rotor:'4615A178', spark:'1822A086', clutch:'2304A075', rack:'4410A453', rad:'1350A297', ac:'7813A618', exh:'1570C312' },
+  Arunima: { epc:'Arunima Bolyan 4x4 EPC', oil:'ARN-1540-BLY01', air:'ARN-1780-BLY02', fuel:'ARN-2339-BLY03', cabin:'ARN-8713-BLY04', pad:'ARN-4605-BLYFR', rotor:'ARN-4351-BLYDS', spark:'ARN-GLW-BLY24V', clutch:'ARN-3121-BLY310', rack:'ARN-4410-BLY4X4', rad:'ARN-1640-BLYHD', ac:'ARN-8831-BLY12V', exh:'ARN-1741-BLYEX' },
+  'Renault / TRM': { epc:'Renault TRM Military EPC', oil:'5001846642', air:'5000814492', fuel:'5001846585', cabin:'5010547120', pad:'5001864360', rotor:'5010422360', spark:'5000242118', clutch:'5001847380', rack:'5010294412', rad:'5010574360', ac:'5010483240', exh:'5010615360' },
   Nissan: { epc:'Nissan FAST EPC', oil:'15208-65F0E', air:'16546-4BA1A', fuel:'16400-4BA0A', cabin:'27277-4BA0A', pad:'D1060-4BA0A', rotor:'40206-4BA0A', spark:'22401-ED815', clutch:'30100-ED80A', rack:'49001-4BA0A', rad:'21410-4BA0A', ac:'92600-4BA0A', exh:'20010-4BA0A' },
   Tata: { epc:'Tata Motors EPC', oil:'2790-1813-0102', air:'5442-0913-0101', fuel:'2786-0911-0114', cabin:'5438-8340-0104', pad:'2702-4210-0118', rotor:'2702-4210-0104', spark:'2791-1511-0103', clutch:'2651-2520-0101', rack:'2641-4620-0102', rad:'2525-5010-0105', ac:'5438-8340-0210', exh:'2525-4920-0108' },
   'Ashok Leyland': { epc:'Ashok Leyland EPC', oil:'F8835100', air:'2786-0913-0101', fuel:'2786-0911-0114', cabin:'AL-CAB-104', pad:'AL-BRK-118', rotor:'AL-DSC-104', spark:'AL-GLW-103', clutch:'AL-CLT-101', rack:'AL-STR-102', rad:'AL-RAD-105', ac:'AL-AC-210', exh:'AL-EXH-108' },
@@ -306,9 +326,18 @@ const EXTRA_SYSTEM_TEMPLATES = [
     ['Motorized Throttle Valve Assembly (55mm)','22030-21030-ETB','1 pc',142,'sensor'],['Hot-Wire Mass Airflow (MAF) Sensor','22204-22010','1 pc',48,'sensor'],
     ['Throttle Body Metal Flange Gasket','22271-21040','1 pc',6.5,'seal'],['Reinforced EPDM Intake Accordion Boot','17881-21140','1 pc',24,'hose']
   ]],
+  ['ful_fuel_micro','Fuel & Air','Primary/Secondary Fuel Filter & Water Separator Micro Kit','23390-0L070','DENSO / BOSCH / RACOR','Fig. 23-01',68,'filter',[
+    ['Primary Paper Cartridge Fuel Filter (5,000 km)','23390-0L070-PRI','1 pc',16,'filter'],['Secondary Steel Fine Fuel Strainer (10,000 km)','23300-21010-SEC','1 pc',24,'filter'],
+    ['Water-in-Fuel (WIF) Float Sensor & Harness','84461-60060','1 pc',22,'sensor'],['Hand Primer Pump Diaphragm & Check Valve','23380-30290','1 pc',28,'pump'],
+    ['Sediment Bowl Sight Cup & Drain Cock Valve','23304-64010','1 pc',14,'bottle'],['Filter Header Brass Air-Bleed Screw + Copper Ring','23315-54010','1 pc',6.5,'bolt'],
+    ['Fuel Line Nylon Quick-Connect Retainer Clips (4x)','90467-12080','4 pcs',7.2,'bolt'],['Hollow Banjo Union Bolt + Dual Copper Washers','90401-12041','1 set',8.4,'bolt'],
+    ['Thermostatic Diesel Fuel Heater Bimetal Switch','23910-30040','1 pc',32,'sensor'],['High-Pressure Return Non-Return Check Valve','23280-21040','1 pc',15,'sensor']
+  ]],
   ['ful_pump','Fuel & Air','In-Tank Turbine Fuel Pump, Strainer & Level Sender','77020-52370','DENSO 950-0105','Fig. 77-01',144,'filter',[
     ['Brushless Turbine Fuel Pump Motor (3.8 bar)','23221-21131','1 pc',72,'filter'],['In-Tank Nylon Pick-Up Strainer Sock','23217-21020','1 pc',12,'filter'],
-    ['Fuel Level Float Sender Rheostat Arm','83320-52210','1 pc',36,'sensor'],['Tank Lock Ring Viton Seal Gasket','77169-52040','1 pc',14,'seal']
+    ['Fuel Level Float Sender Rheostat Arm','83320-52210','1 pc',36,'sensor'],['Tank Lock Ring Viton Seal Gasket','77169-52040','1 pc',14,'seal'],
+    ['In-Tank Pressure Regulator & Viton O-Ring Pair','23280-21010','1 pc',24,'sensor'],['Corrugated Submersible Flex Fuel Conduit Tube','77209-52010','1 pc',9.5,'hose'],
+    ['Anti-Drainback Pump Outlet Check Valve','23229-21010','1 pc',11,'sensor'],['Top Flange Electrical Bulkhead 4-Pin Grommet','82998-24290','1 pc',8,'seal']
   ]],
   ['ful_pcv','Fuel & Air','PCV Breather Valve, EVAP Purge & Vacuum Kit','12204-21011','AISIN PCV-004','Fig. 12-01',42,'hose',[
     ['OEM Spring-Loaded PCV Check Valve','12204-21011-PCV','1 pc',14,'sensor'],['EVAP Vacuum Purge Control Solenoid','90910-12276','1 pc',28,'sensor'],
@@ -342,15 +371,20 @@ const EXTRA_SYSTEM_TEMPLATES = [
   // CLUTCH (5 extra -> 6 total)
   ['clt_fly','Clutch','Balanced Flywheel, Pilot Bearing & Bolt Kit','13405-21040','LUK / AISIN','Fig. 13-03',224,'rotor',[
     ['Precision-Balanced Flywheel / Flexplate','13405-21040-FLY','1 pc',178,'rotor'],['Koyo Sealed Input Pilot Ball Bearing','90363-12002','1 pc',14.5,'bearing'],
-    ['Hardened Starter Ring Gear Band','13453-21010','1 pc',38,'bearing'],['High-Tensile Crank-to-Flywheel Bolts (8x)','90910-02116','8 pcs',18,'bolt']
+    ['Hardened Starter Ring Gear Band','13453-21010','1 pc',38,'bearing'],['High-Tensile Crank-to-Flywheel Bolts (8x)','90910-02116','8 pcs',18,'bolt'],
+    ['Torsion Hub Damper Coil Springs (6x)','31250-12410-SPR','6 pcs',16,'spring'],['Clutch Disc Cushion Rivet & Strap Kit','31214-12010','1 kit',9.5,'bracket'],
+    ['Pressure Plate Alignment Dowel Pins (3x)','90250-08121','3 pcs',5.2,'bolt'],['Rear Crankshaft Pilot Needle Sleeve Retainer','90364-12004','1 pc',7.8,'bearing']
   ]],
   ['clt_mc','Clutch','Clutch Master Cylinder & Braided Line Kit','31420-12040','AISIN CMT-134','Fig. 31-03',62,'bottle',[
     ['Anodized 15.87mm Clutch Master Cylinder','31420-12040-MC','1 pc',46,'bottle'],['Seiken EPDM Master Piston Seal Kit','04311-12110','1 kit',12,'seal'],
-    ['Braided High-Pressure Clutch Flex Hose','90947-02D65','1 pc',16.5,'hose'],['Clevis Pin & Pedal Return Spring','90249-08145','1 kit',5.8,'spring']
+    ['Braided High-Pressure Clutch Flex Hose','90947-02D65','1 pc',16.5,'hose'],['Clevis Pin & Pedal Return Spring','90249-08145','1 kit',5.8,'spring'],
+    ['Master Reservoir Cap + EPDM Diaphragm Seal','31433-12020','1 pc',8.5,'seal'],['Slave Cylinder Rubber Dust Boot & Piston Cup','04313-12040','1 kit',9.5,'seal'],
+    ['Hydraulic Hard-Line Flare Union Nuts (2x M10)','90402-10021','2 pcs',4.5,'bolt'],['Concentric Slave Cylinder (CSC) Bleed Elbow','31478-12030','1 pc',11,'bolt']
   ]],
   ['clt_fork','Clutch','Forged Clutch Release Fork, Pivot & Boot','31204-12120','AISIN CFK-019','Fig. 31-02',48,'bracket',[
     ['Forged Chromoly Release Fork Lever','31204-12120-FRK','1 pc',32,'bracket'],['Hardened Spherical Pivot Ball Stud','31236-12020','1 pc',9.5,'bolt'],
-    ['Bellhousing Rubber Dust Exclusion Boot','31126-12051','1 pc',8.5,'seal'],['Release Bearing Wire Clip Spring Pair','31232-12010','2 pcs',4.5,'spring']
+    ['Bellhousing Rubber Dust Exclusion Boot','31126-12051','1 pc',8.5,'seal'],['Release Bearing Wire Clip Spring Pair','31232-12010','2 pcs',4.5,'spring'],
+    ['Diaphragm Fulcrum Wire Rings (2x)','31217-12010','2 pcs',7.2,'seal'],['Input Shaft Spline Guide Quill','33131-12020','1 pc',18,'bearing']
   ]],
   ['clt_pdl','Clutch','Clutch Pedal Bush, Pad & Start Interlock Switch','31301-12310','OEM PEDAL-KIT','Fig. 55-02',39,'wiper',[
     ['Clutch Start Safety Interlock Switch','84520-12020','1 pc',18,'sensor'],['Anti-Slip Rubber Pedal Pad','31321-12030','1 pc',6.5,'pad'],
@@ -405,15 +439,21 @@ const EXTRA_SYSTEM_TEMPLATES = [
   // BRAKES (5 extra -> 6 total)
   ['brk_rear','Brakes','Rear Ceramic Pad / Shoe, Disc & Cylinder Kit','04466-52151','AKEBONO / BREMBO','Fig. 47-06',98,'pad',[
     ['Rear Low-Dust Ceramic Pad / Shoe Set','04466-52151-PAD','4 pcs',42,'pad'],['Rear Solid / Vented Brake Disc Pair','42431-12310','2 pcs',86,'rotor'],
-    ['Seiken Rear Drum Wheel Cylinder Unit','47550-52011','1 pc',28,'bottle'],['Parking Brake Self-Adjuster Spring Kit','04943-52040','1 kit',14,'spring']
+    ['Seiken Rear Drum Wheel Cylinder Unit','47550-52011','1 pc',28,'bottle'],['Parking Brake Self-Adjuster Spring Kit','04943-52040','1 kit',14,'spring'],
+    ['Drum Shoe Hold-Down Pin, Cup & Strut Kit','04942-52010','1 kit',9,'spring'],['Wheel Cylinder Dual EPDM Piston Cup Seal Kit','04476-52010','1 kit',7.5,'seal'],
+    ['Rear Hub Magnetic ABS Encoder Reluctor Ring','43515-52020','1 pc',16,'bearing']
   ]],
   ['brk_cal','Brakes','Front Caliper Piston, Slide Pin & Seal Kit','04478-52170','SEIKEN / ADVICS','Fig. 47-05',56,'rotor',[
     ['Hard-Chrome Caliper Piston (54mm)','47731-52190','1 pc',24,'bottle'],['Seiken Square-Cut Seal & Dust Boot Kit','04478-52170-KIT','1 kit',18,'seal'],
-    ['Precision Upper/Lower Caliper Slide Pins','47715-52190','4 pcs',16,'bolt'],['Silicone Caliper Grease & Bleeder Cap','08887-01206','1 kit',7.5,'bottle']
+    ['Precision Upper/Lower Caliper Slide Pins','47715-52190','4 pcs',16,'bolt'],['Silicone Caliper Grease & Bleeder Cap','08887-01206','1 kit',7.5,'bottle'],
+    ['Caliper Piston Wire Retainer Ring & Dust Bellows','47732-52190','1 kit',6.8,'seal'],['Anti-Rattle Stainless Caliper Bridge Spring Clip','47748-52040','1 pc',5.5,'spring'],
+    ['Pad Wear Audible Scraper Indicator Tab Set (2x)','47771-52020','2 pcs',4.2,'pad'],['Brass Caliper Air-Bleeder Screw (M8×1.25)','47547-20010','1 pc',4.8,'bolt']
   ]],
   ['brk_mc','Brakes','Tandem Brake Master Cylinder & Booster Kit','47201-52590','ADVICS / AISIN','Fig. 47-02',148,'bottle',[
     ['Advics Dual-Circuit Brake Master Cylinder','47201-52590-MC','1 pc',112,'bottle'],['Reservoir Fluid Level Float Sensor Cap','47230-47090','1 pc',18,'sensor'],
-    ['Vacuum Brake Booster Check Valve','44730-28030','1 pc',12,'sensor'],['Master-to-Booster Flange EPDM Seal','44785-12060','1 pc',6.5,'seal']
+    ['Vacuum Brake Booster Check Valve','44730-28030','1 pc',12,'sensor'],['Master-to-Booster Flange EPDM Seal','44785-12060','1 pc',6.5,'seal'],
+    ['Primary & Secondary Master Piston Cups','04493-52040','1 kit',14.5,'seal'],['Booster Vacuum Grommet & Pushrod Clevis Pin','44743-12040','1 kit',7.8,'bolt'],
+    ['Brake Light Stop-Lamp Micro Pedal Switch','84340-69075','1 pc',13,'sensor']
   ]],
   ['brk_hse','Brakes','DOT Braided Brake Flex Hoses & Banjo Kit (4x)','90947-02F38','SEIKEN SH-31245','Fig. 47-08',54,'hose',[
     ['Front Caliper Braided Brake Hoses (2x)','90947-02F38-FR','2 pcs',28,'hose'],['Rear Axle Braided Brake Hoses (2x)','90947-02F41-RR','2 pcs',26,'hose'],
@@ -457,26 +497,38 @@ const EXTRA_SYSTEM_TEMPLATES = [
     ['12V Squirrel-Cage Cabin Blower Motor','87103-12080-BLW','1 pc',68,'fan'],['Solid-State MOSFET Blower Resistor','87165-13010','1 pc',32,'sensor'],
     ['Air-Mix / Mode Blend Door Stepper Servo','87106-12190','1 pc',44,'sensor'],['Fresh-Air Recirculation Damper Foam Seal','87195-12040','1 pc',9,'pad']
   ]],
-  ['hvc_pip','AC / HVAC','AC Discharge/Suction Hose & Mag Clutch Kit','88711-12790','DENSO COOLGEAR','Fig. 88-02',86,'hose',[
-    ['AC Compressor Magnetic Clutch & Pulley','88410-12560','1 set',64,'bearing'],['High-Pressure Barrier Discharge AC Hose','88711-12790-HSE','1 pc',38,'hose'],
-    ['High/Low Service Port Schrader Cores','88374-20010','4 pcs',8,'bolt'],['ND-OIL 8 / Hybrid POE AC Oil (150ml)','08885-09129','1 btl',24,'bottle']
+  ['hvc_pip','AC / HVAC','AC Compressor Magnetic Clutch, Shaft Seal & Piping Kit','88711-12790','DENSO COOLGEAR / NSK','Fig. 88-02',96,'hose',[
+    ['AC Compressor Magnetic Clutch Coil Stator (12V)','88410-12560','1 pc',38,'sensor'],['6PK Clutch Pulley + NSK Bearing (35BD5222)','88412-12560','1 set',42,'bearing'],
+    ['Clutch Front Armature Hub Plate + Air-Gap Shims','88415-12560','1 kit',24,'rotor'],['Compressor Front Shaft Carbon-Ceramic Lip Seal','88335-14020','1 pc',18,'seal'],
+    ['Swash-Plate Valve Reed Plate & Teflon Rings','88318-12040','1 kit',34,'pad'],['Compressor High-Pressure Pop-Off Relief Valve','88378-12010','1 pc',12.5,'sensor'],
+    ['High-Pressure Barrier Discharge AC Hose','88711-12790-HSE','1 pc',38,'hose'],['High/Low Service Port Schrader Cores & Caps','88374-20010','4 pcs',8,'bolt'],
+    ['ND-OIL 8 / Hybrid POE AC Oil (150ml)','08885-09129','1 btl',24,'bottle']
   ]],
   ['hvc_rear','AC / HVAC','Rear Cabin Dual-Zone AC Piping & Vent Kit','88578-28120','DENSO REAR-AC','Fig. 87-15',110,'hose',[
     ['Rear Evaporator Expansion Valve Block','88515-28160','1 pc',36,'sensor'],['Roof-Line Rear Cabin AC Blower Motor','87103-28110','1 pc',72,'fan'],
     ['Dashboard Louver Air Vent Grille Assembly','55650-12310','1 pc',28,'pad'],['Rear AC Aluminum Tube Block-Off Seals','88718-28110','2 pcs',11,'seal']
   ]],
   // ELECTRICAL (5 extra -> 6 total)
-  ['elc_alt','Electrical','High-Output Alternator & Decoupler Pulley Kit','27060-21150','DENSO 104210','Fig. 19-03',218,'battery',[
-    ['Overrunning Alternator Decoupler Pulley','27415-0W021','1 pc',42,'bearing'],['IC Voltage Regulator & Brush Assembly','27700-21050','1 pc',34,'sensor'],
-    ['High-Current 6-Diode Rectifier Bridge','27357-21080','1 pc',29,'sensor'],['NTN Sealed Alternator Rotor Bearings (2x)','90099-10192','2 pcs',18,'bearing']
+  ['elc_alt','Electrical','High-Output Alternator, Regulator, Brush & Stator Kit','27060-21150','DENSO 104210 / NTN','Fig. 19-03',218,'battery',[
+    ['Overrunning Alternator Decoupler Clutch Pulley','27415-0W021','1 pc',42,'bearing'],['IC Smart Voltage Regulator Module (LIN/PWM)','27700-21050','1 pc',34,'sensor'],
+    ['Alternator Carbon Brush Pair & Springs Holder','27370-75060','1 set',11.5,'sensor'],['High-Current 6-Diode / 8-Diode Rectifier Bridge','27357-21080','1 pc',29,'sensor'],
+    ['3-Phase Copper Hairpin Stator Winding Core','27310-21150','1 pc',68,'battery'],['Rotor Field Coil & Dual Brass Slip-Ring Assembly','27330-21150','1 pc',54,'bearing'],
+    ['NTN Drive-End (6303) & Rear (6202) Bearings (2x)','90099-10192','2 pcs',18,'bearing'],['B+ Output Terminal Insulator Boot & M8 Brass Nut','27387-70010','1 kit',5.5,'bolt'],
+    ['Bearing Retainer Plate & Stator Through-Bolts (4x)','27362-21020','1 kit',6.2,'bolt'],['Rear Cooling Baffle & 4-Pin Sense Plug','27381-21150','1 pc',12,'sensor']
   ]],
-  ['elc_str','Electrical','Planetary Reduction Starter Motor & Solenoid','28100-21061','DENSO 428000','Fig. 19-04',164,'bearing',[
-    ['Starter Magnetic Solenoid Plunger Switch','28150-21040','1 pc',34,'sensor'],['One-Way Pinion Overrunning Bendix Clutch','28011-21030','1 pc',38,'bearing'],
-    ['Armature Commutator Carbon Brush Holder','28140-21050','1 kit',16,'sensor'],['Planetary Reduction Nylon Ring Gear','28021-21020','1 pc',22,'bearing']
+  ['elc_str','Electrical','Planetary Reduction Starter Motor, Solenoid & Bendix Kit','28100-21061','DENSO 428000','Fig. 19-04',164,'bearing',[
+    ['Starter Magnetic Solenoid Switch Body & Plunger','28150-21040','1 pc',34,'sensor'],['Solenoid Copper Contact Disc & Terminal Lug Kit','28226-54320','1 kit',14,'sensor'],
+    ['One-Way Pinion Overrunning Bendix Clutch Drive','28011-21030','1 pc',38,'bearing'],['4-Piece Carbon Brush Holder Plate & Springs','28140-21050','1 kit',16,'sensor'],
+    ['Planetary Reduction Ring Gear & 3 Steel Pinions','28021-21020','1 set',22,'bearing'],['Starter Copper-Bar Armature Commutator Rotor','28160-21060','1 pc',52,'battery'],
+    ['Steel Shift Lever Drive Yoke & Pivot Pin','28180-21030','1 pc',12,'bracket'],['Drive-End Housing & Oilite Bronze Bushings (2x)','28111-21040','1 kit',11,'bearing'],
+    ['Pinion Stop Collar, Thrust Washer & Snap Ring','90520-12015','1 kit',5.4,'seal'],['Starter Exciter Wire 1-Pin Terminal Boot Seal','28235-21010','1 pc',4.5,'seal']
   ]],
-  ['elc_cop','Electrical','Coil-on-Plug Ignition Pack, Crank & Cam Sensors','90919-02258','DENSO / NGK U5065','Fig. 19-01',158,'spark',[
-    ['Direct Coil-on-Plug Ignition Coils (4x)','90919-02258-COP','4 pcs',128,'spark'],['Crankshaft Position (CKP) Timing Sensor','90919-05070','1 pc',36,'sensor'],
-    ['Camshaft Phase Position (CMP) Sensor','90919-05060','1 pc',34,'sensor'],['4-Pin Waterproof Ignition Connector Plugs','90980-11885','4 pcs',16,'sensor']
+  ['elc_cop','Electrical','Direct Coil-on-Plug, Boot, Relay & Crank/Cam Sensor Kit','90919-02258','DENSO / NGK U5065','Fig. 19-01',158,'spark',[
+    ['Direct Coil-on-Plug Ignition Coils (4x)','90919-02258-COP','4 pcs',128,'spark'],['Silicone High-Dielectric Boot & Resistor Springs (4x)','90919-11009','4 pcs',18,'hose'],
+    ['Crankshaft Position (CKP) Timing Sensor + O-Ring','90919-05070','1 pc',36,'sensor'],['Camshaft Phase Position (CMP) Hall Sensor + O-Ring','90919-05060','1 pc',34,'sensor'],
+    ['4-Pin Waterproof Ignition Connector Plugs (4x)','90980-11885','4 pcs',16,'sensor'],['30A Ignition Main Micro Relay & 15A Mini Fuse Pair','90987-02028','1 kit',11,'sensor'],
+    ['RFI Ignition Noise Filter Condenser Suppressor','90980-04120','1 pc',14.5,'sensor'],['Piezo Engine Block Knock Detonation Sensor','89615-20090','1 pc',38,'sensor'],
+    ['Coil Hold-Down M6 Flange Bolts & Inserts (4x)','90119-06915','4 pcs',5,'bolt']
   ]],
   ['elc_lmp','Electrical','Projector Headlamp, Fuse Relay Box & Horn Kit','81110-12J30','KOITO / DENSO','Fig. 81-01',192,'wiper',[
     ['Koito Projector Headlamp Housing (RH/LH)','81110-12J30-LMP','1 pc',156,'wiper'],['LED / HID High-Low Bulb & Driver Module','90981-20024','2 pcs',44,'spark'],
@@ -566,6 +618,15 @@ function getCodesForVehicle(v, variantIdx) {
     c.rotor = '4615A035';
     c.rack = '4410A323';
     c.rad = '1350A141';
+  } else if (v.brand === 'Mitsubishi' && m.includes('outlander')) {
+    c.oil = m.includes('cw5') || vr.chassis === 'CW5W' ? 'MD360935' : 'MZ690070';
+    c.air = '1500A023';
+    c.cabin = '7803A004';
+    c.pad = '4605A486';
+    c.rotor = '4615A075';
+    c.rack = '4410A409';
+    c.rad = '1350A297';
+    c.spark = '1822A068';
   } else if (v.brand === 'Tata' && m.includes('hexa')) {
     c.oil = '2790-1813-0102';
     c.air = '5442-0913-0101';
@@ -653,7 +714,7 @@ function buildFullCatalog(v, variantIdx) {
     ]}
   ];
 
-  // Expand each system with additional assemblies and pad every assembly to 22 sub-parts -> 72 assemblies + 1,584 sub-parts = 1,656 parts!
+  // Expand each system with additional assemblies and pad every assembly to 24 sub-parts -> 73 assemblies + 1,752 sub-parts = 1,825 parts!
   const allAssemblies = [...core];
   EXTRA_SYSTEM_TEMPLATES.forEach(([id, sys, name, oemTail, alt, fig, price, icon, subArr]) => {
     allAssemblies.push({
@@ -670,12 +731,12 @@ function buildFullCatalog(v, variantIdx) {
     });
   });
 
-  // Pad every assembly to 22 numbered micro sub-parts and build flat 1,656-part index
+  // Pad every assembly to 24 numbered micro sub-parts and build flat 1,825-part index
   const flatParts = [];
   allAssemblies.forEach((asm, asmIdx) => {
     const baseTail = asm.oem.replace(/[^A-Z0-9]/gi, '').slice(-5) || '10001';
     let hwIdx = 0;
-    while (asm.subs.length < 22) {
+    while (asm.subs.length < 24) {
       const [hwName, hwIcon, hwSpec, hwPrice] = HARDWARE_SUFFIXES[hwIdx % HARDWARE_SUFFIXES.length];
       const seq = asm.subs.length + 1;
       asm.subs.push({

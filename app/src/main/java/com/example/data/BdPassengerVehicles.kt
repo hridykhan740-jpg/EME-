@@ -529,10 +529,11 @@ internal object BdPassengerVehicles {
       model = "Outlander",
       category = VehicleCategory.SUVS_CROSSOVERS_4X4,
       marketCodes = listOf("BD", "JDM", "ASEAN", "USDM", "EDM"),
-      years = (2014..2026).toList().reversed(),
+      years = (2008..2026).toList().reversed(),
       variants = listOf(
         VehicleVariantSpec("2.0L / 2.4L 4J11/4J12 MIVEC 7-Seater 4WD (GF7W / GF8W)", Powertrain.PETROL, "GF8W"),
         VehicleVariantSpec("2.4L Twin-Motor PHEV 4WD (GG3W / GN0W)", Powertrain.HYBRID, "GG3W"),
+        VehicleVariantSpec("2.4L 4B12 / 3.0L V6 6B31 S-AWC (CW5W / CW6W / GN0W)", Powertrain.PETROL, "CW5W"),
       ),
     ),
     VehicleModelSpec(

@@ -116,14 +116,17 @@ object PredictiveMaintenanceEngine {
     return when {
       combined.contains("lpt 1615") || combined.contains("prima") || combined.contains("ak1j") ||
         combined.contains("rm2") || combined.contains("viking") || combined.contains("ecomet") ||
-        combined.contains("pro 3015") || combined.contains("skyline") || combined.contains("500 series") ->
+        combined.contains("pro 3015") || combined.contains("skyline") || combined.contains("500 series") ||
+        combined.contains("trm 240") || combined.contains("trm 360") ->
         BaoVehicleClass.HEAVY_TRUCK_BUS
       combined.contains("dyna") || combined.contains("canter") || combined.contains("n-series") ||
-        combined.contains("pro 2049") || combined.contains("300") && vehicle.brand.equals("Hino", ignoreCase = true) ->
+        combined.contains("pro 2049") || combined.contains("trm 180") ||
+        (combined.contains("300") && vehicle.brand.equals("Hino", ignoreCase = true)) ->
         BaoVehicleClass.MEDIUM_TRUCK
       combined.contains("hilux") || combined.contains("l200") || combined.contains("d-max") ||
         combined.contains("bolero") || combined.contains("dost") || combined.contains("ace") ||
         combined.contains("intra") || combined.contains("xenon") || combined.contains("jeeto") ||
+        combined.contains("bolyan") || combined.contains("arunima") ||
         matchedSpec?.category == VehicleCategory.MICROBUSES_MPVS_VANS ->
         BaoVehicleClass.PICKUP_LIGHT_MPV
       matchedSpec?.category == VehicleCategory.SUVS_CROSSOVERS_4X4 ||

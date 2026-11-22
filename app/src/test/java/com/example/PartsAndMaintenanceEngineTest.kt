@@ -63,6 +63,7 @@ class PartsAndMaintenanceEngineTest {
       "Land Cruiser Prado", "Land Cruiser V8 / 300", "Harrier", "Vezel", "HR-V",
       "Outlander", "Pajero", "X-Trail", "Tucson", "Sportage", "ZS", "H6", "Hexa",
       "Noah", "Voxy", "Alphard", "HiAce", "Serena", "Delica",
+      "Bolyan", "TRM 180", "TRM 240", "TRM 360",
       "Hilux", "Dyna", "L200", "Fuso Canter", "Ace", "Intra", "Xenon", "LPT 1615",
       "Prima", "Dost", "Ecomet", "Viking", "Bolero Pickup", "Jeeto", "D-Max", "N-Series",
       "AK1J", "RM2", "300 / 500 Series", "Pro 2049",
@@ -88,7 +89,19 @@ class PartsAndMaintenanceEngineTest {
     val coveredSystems = axioParts.map { it.system }.toSet()
     assertEquals(CatalogSystem.entries.toSet(), coveredSystems)
     val totalPartsCount = axioParts.size + axioParts.sumOf { it.subComponents.size }
-    assertTrue("Expected 1500+ parts per vehicle, got $totalPartsCount", totalPartsCount >= 1500)
+    assertTrue("Expected 1800+ parts per vehicle, got $totalPartsCount", totalPartsCount >= 1800)
+
+    listOf(
+      "ful_fuel_filter_micro",
+      "elc_alternator",
+      "elc_starter_motor",
+      "elc_ignition_coils",
+      "brk_caliper_kit",
+      "clt_flywheel",
+      "hvc_ac_pipes",
+    ).forEach { id ->
+      assertTrue("Missing micro breakdown assembly: $id", axioParts.any { it.id == id && it.subComponents.size == 24 })
+    }
 
     val oilFilterAssembly = axioParts.first { it.id == "eng_oil_filter" }
     assertTrue(oilFilterAssembly.epcCatalogRef.contains("Toyota EPC"))
@@ -162,6 +175,45 @@ class PartsAndMaintenanceEngineTest {
     )
     val trnSuv = suvSchedule.first { it.taskKey == "transmission_fluid" }
     assertEquals(14_000, trnSuv.intervalKm)
+
+    val bolyan = sampleAxioBd.copy(
+      id = "veh_bd_bolyan",
+      brand = "Arunima",
+      model = "Bolyan (অরোনিমা বলিয়ান)",
+      powertrain = Powertrain.DIESEL.name,
+    )
+    val bolyanSchedule = PredictiveMaintenanceEngine.computeSchedule(
+      vehicle = bolyan,
+      logs = emptyList(),
+      catalogParts = parts,
+    )
+    assertEquals(14_000, bolyanSchedule.first { it.taskKey == "transmission_fluid" }.intervalKm)
+
+    val trm180 = sampleAxioBd.copy(
+      id = "veh_bd_trm180",
+      brand = "Renault / TRM",
+      model = "TRM 180 (টি আর এম ১৮০)",
+      powertrain = Powertrain.DIESEL.name,
+    )
+    val trm180Schedule = PredictiveMaintenanceEngine.computeSchedule(
+      vehicle = trm180,
+      logs = emptyList(),
+      catalogParts = parts,
+    )
+    assertEquals(29_000, trm180Schedule.first { it.taskKey == "transmission_fluid" }.intervalKm)
+
+    val trm360 = sampleAxioBd.copy(
+      id = "veh_bd_trm360",
+      brand = "Renault / TRM",
+      model = "TRM 360 (টি আর এম ৩৬০)",
+      powertrain = Powertrain.DIESEL.name,
+    )
+    val trm360Schedule = PredictiveMaintenanceEngine.computeSchedule(
+      vehicle = trm360,
+      logs = emptyList(),
+      catalogParts = parts,
+    )
+    assertEquals(38_000, trm360Schedule.first { it.taskKey == "transmission_fluid" }.intervalKm)
 
     val logs = listOf(
       MaintenanceLog(

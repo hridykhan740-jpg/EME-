@@ -173,6 +173,30 @@
       justify-content: center; text-decoration: none; transition: border-color 0.15s, transform 0.15s;
     }
     .social-icon-btn:hover { border-color: var(--cyan); transform: translateY(-1px); }
+    .footer-stats {
+      width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      padding-top: 10px; border-top: 1px solid rgba(51, 65, 85, 0.7);
+    }
+    .stat-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px;
+      border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); font-size: 0.78rem; font-weight: 600;
+    }
+    .stat-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+      border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); font-size: 0.78rem; font-weight: 700; cursor: pointer;
+      min-height: 36px; transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .stat-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .stat-btn.active {
+      background: rgba(16, 185, 129, 0.16); border-color: var(--emerald); color: var(--emerald);
+    }
+    .stat-btn.liked.active {
+      background: rgba(249, 115, 22, 0.18); border-color: var(--orange); color: var(--orange);
+    }
+    .stat-val { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; color: var(--cyan); }
+    .stat-btn.active .stat-val { color: inherit; }
     /* Illustrated Numbered EPC Chart Styles */
     .epc-banner {
       display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
@@ -292,7 +316,7 @@
       </div>
 
       <div style="margin-bottom: 10px;">
-        <input id="vin-search" type="text" placeholder="Quick VIN / Chassis (e.g. V93, V94, V96, V98, GDJ150, FJA300, HEXA, NKE165) or Model (Land Cruiser, Prado, Pajero, Tata Hexa)…" oninput="onVinSearch(this.value)" />
+        <input id="vin-search" type="text" placeholder="Quick VIN / Chassis (e.g. V93, V94, V96, V98, Bolyan, TRM 180, TRM 240, TRM 360, Outlander, GDJ150, HEXA)…" oninput="onVinSearch(this.value)" />
         <div id="vin-hits" class="hit-list" style="display:none;"></div>
       </div>
 
@@ -327,13 +351,13 @@
       <div class="card no-print">
         <div class="row" style="gap: 8px;">
           <div style="flex:1; min-width:220px;">
-            <input id="part-search" type="search" placeholder="Instant search 1,656 parts, OEM # or assembly (e.g. O-ring, 90915, V94, bleeder, rotor, ball joint)…" oninput="onPartSearch(this.value)" />
+            <input id="part-search" type="search" placeholder="Instant search 1,825 parts, OEM # or assembly (e.g. fuel filter, alternator, starter, caliper, clutch, ignition, AC)…" oninput="onPartSearch(this.value)" />
           </div>
           <div class="epc-mode-bar">
-            <button id="mode-assemblies" class="epc-mode-btn active" onclick="setViewMode('assemblies')">72 Assemblies</button>
-            <button id="mode-all" class="epc-mode-btn" onclick="setViewMode('all')">All 1,656 Parts Chart</button>
+            <button id="mode-assemblies" class="epc-mode-btn active" onclick="setViewMode('assemblies')">73 Assemblies</button>
+            <button id="mode-all" class="epc-mode-btn" onclick="setViewMode('all')">All 1,825 Parts Chart</button>
           </div>
-          <span class="muted" id="parts-counter">1,656 parts</span>
+          <span class="muted" id="parts-counter">1,825 parts</span>
         </div>
         <div class="chips" id="system-chips" style="margin-top:8px;"></div>
       </div>
@@ -413,6 +437,20 @@
           </svg>
         </a>
       </div>
+      <div class="footer-stats no-print" aria-label="Website engagement statistics">
+        <span class="stat-chip" title="মোট ভিজিট সংখ্যা (Visits)">
+          <span>👁 ভিজিট (Visits):</span>
+          <span class="stat-val" id="stat-visits">0</span>
+        </span>
+        <button type="button" id="stat-follow-btn" class="stat-btn" onclick="toggleSiteFollow()" aria-pressed="false" title="ফলোয়ার সংখ্যা (Followers)">
+          <span id="stat-follow-label">+ ফলো করুন (Followers):</span>
+          <span class="stat-val" id="stat-followers">0</span>
+        </button>
+        <button type="button" id="stat-like-btn" class="stat-btn liked" onclick="toggleSiteLike()" aria-pressed="false" title="মোট লাইক সংখ্যা (Likes)">
+          <span id="stat-like-label">👍 লাইক (Likes):</span>
+          <span class="stat-val" id="stat-likes">0</span>
+        </button>
+      </div>
     </footer>
   </main>
 
@@ -453,14 +491,14 @@
 
     function classifyVehicleBao(v) {
       const m = `${v.brand} ${v.model}`.toLowerCase();
-      if (v.cat === 'TRUCK_BUS') {
-        if (/tata ace|intra|bolero|jeeto|xenon|dost|hilux|l200|d-max|dyna/.test(m)) {
-          return { key:'pickup', label:'৩/৪ ও ১/১-১/২ টন পিকআপ', psOil:'০.৪৫ লিঃ', trnKm:14000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:true };
+      if (v.cat === 'COMMERCIAL' || v.cat === 'TRUCK_BUS') {
+        if (/arunima|bolyan|tata ace|intra|bolero|jeeto|xenon|dost|hilux|l200|d-max|dyna/.test(m)) {
+          return { key:'pickup', label:'৩/৪ ও ১/১-১/২ টন পিকআপ / ৪x৪', psOil:'০.৪৫ লিঃ', trnKm:14000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:true };
         }
-        if (/lpt|prima|ecomet|viking|rm2|ak1j|pro 2049|500 series/.test(m)) {
-          return { key:'heavy', label:'৫ টন ও তদূর্ধ্ব ট্রাক/বাস', psOil:'০.৬০ লিঃ', trnKm:38000, trnMo:18, oilPaperKm:10000, oilPaperMo:6, feltCleanKm:10000, feltRepKm:19000, feltRepMo:12, timingNote:false };
+        if (/trm 240|trm 360|trm-10000|lpt|prima|ecomet|viking|rm2|ak1j|pro 2049|500 series/.test(m)) {
+          return { key:'heavy', label:'৫ টন ও তদূর্ধ্ব ট্রাক/বাস (TRM ২৪০/৩৬০)', psOil:'০.৬০ লিঃ', trnKm:38000, trnMo:18, oilPaperKm:10000, oilPaperMo:6, feltCleanKm:10000, feltRepKm:19000, feltRepMo:12, timingNote:false };
         }
-        return { key:'med', label:'২-১/২ ও ৩-১/২ টন ট্রাক', psOil:'০.৬০ লিঃ', trnKm:29000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:false };
+        return { key:'med', label:'২-১/২ ও ৩-১/২ টন ট্রাক (TRM ১৮০)', psOil:'০.৬০ লিঃ', trnKm:29000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:false };
       }
       if (v.cat === 'MPV') {
         return { key:'pickup', label:'পিকআপ / এমপিভি (৩/৪–১.৫ টন)', psOil:'০.৪৫ লিঃ', trnKm:14000, trnMo:12, oilPaperKm:5000, oilPaperMo:3, feltCleanKm:5000, feltRepKm:10000, feltRepMo:6, timingNote:true };
@@ -1001,8 +1039,118 @@
       });
     }
 
+    const COUNTER_NS = 'eme-automatic-help-bd';
+    function readIntStore(k) {
+      const n = parseInt(localStorage.getItem(k) || '0', 10);
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    }
+    const statsState = {
+      visits: readIntStore('eme_site_visits'),
+      followers: readIntStore('eme_site_followers'),
+      likes: readIntStore('eme_site_likes'),
+      followed: localStorage.getItem('eme_site_followed') === '1',
+      liked: localStorage.getItem('eme_site_liked') === '1'
+    };
+
+    function renderCommunityStats() {
+      const vEl = document.getElementById('stat-visits');
+      const fEl = document.getElementById('stat-followers');
+      const lEl = document.getElementById('stat-likes');
+      const fBtn = document.getElementById('stat-follow-btn');
+      const lBtn = document.getElementById('stat-like-btn');
+      const fLbl = document.getElementById('stat-follow-label');
+      const lLbl = document.getElementById('stat-like-label');
+      if (vEl) vEl.textContent = statsState.visits.toLocaleString();
+      if (fEl) fEl.textContent = statsState.followers.toLocaleString();
+      if (lEl) lEl.textContent = statsState.likes.toLocaleString();
+      if (fBtn) {
+        fBtn.classList.toggle('active', statsState.followed);
+        fBtn.setAttribute('aria-pressed', String(statsState.followed));
+      }
+      if (lBtn) {
+        lBtn.classList.toggle('active', statsState.liked);
+        lBtn.setAttribute('aria-pressed', String(statsState.liked));
+      }
+      if (fLbl) fLbl.textContent = statsState.followed ? '✓ ফলোয়িং (Followers):' : '+ ফলো করুন (Followers):';
+      if (lLbl) lLbl.textContent = statsState.liked ? '❤️ লাইকড (Likes):' : '👍 লাইক (Likes):';
+    }
+
+    async function syncPublicCounter(metric, action) {
+      try {
+        const ctrl = new AbortController();
+        const tId = setTimeout(() => ctrl.abort(), 1500);
+        const url = action
+          ? `https://api.counterapi.dev/v1/${COUNTER_NS}/${metric}/${action}`
+          : `https://api.counterapi.dev/v1/${COUNTER_NS}/${metric}/`;
+        const res = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(tId);
+        if (!res.ok) return null;
+        const data = await res.json();
+        return typeof data.count === 'number' && data.count >= 0 ? data.count : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function initCommunityStats() {
+      const firstInSession = !sessionStorage.getItem('eme_visit_counted');
+      if (firstInSession) {
+        statsState.visits += 1;
+        localStorage.setItem('eme_site_visits', String(statsState.visits));
+        sessionStorage.setItem('eme_visit_counted', '1');
+      }
+      renderCommunityStats();
+      const [remoteV, remoteF, remoteL] = await Promise.all([
+        syncPublicCounter('visits', firstInSession ? 'up' : ''),
+        syncPublicCounter('followers', ''),
+        syncPublicCounter('likes', '')
+      ]);
+      if (remoteV !== null && remoteV > statsState.visits) {
+        statsState.visits = remoteV;
+        localStorage.setItem('eme_site_visits', String(remoteV));
+      }
+      if (remoteF !== null && remoteF > statsState.followers) {
+        statsState.followers = remoteF;
+        localStorage.setItem('eme_site_followers', String(remoteF));
+      }
+      if (remoteL !== null && remoteL > statsState.likes) {
+        statsState.likes = remoteL;
+        localStorage.setItem('eme_site_likes', String(remoteL));
+      }
+      renderCommunityStats();
+    }
+
+    async function toggleSiteFollow() {
+      statsState.followed = !statsState.followed;
+      statsState.followers = Math.max(0, statsState.followers + (statsState.followed ? 1 : -1));
+      localStorage.setItem('eme_site_followed', statsState.followed ? '1' : '0');
+      localStorage.setItem('eme_site_followers', String(statsState.followers));
+      renderCommunityStats();
+      const remote = await syncPublicCounter('followers', statsState.followed ? 'up' : 'down');
+      if (remote !== null && remote >= (statsState.followed ? 1 : 0)) {
+        statsState.followers = remote;
+        localStorage.setItem('eme_site_followers', String(remote));
+        renderCommunityStats();
+      }
+    }
+
+    async function toggleSiteLike() {
+      statsState.liked = !statsState.liked;
+      statsState.likes = Math.max(0, statsState.likes + (statsState.liked ? 1 : -1));
+      localStorage.setItem('eme_site_liked', statsState.liked ? '1' : '0');
+      localStorage.setItem('eme_site_likes', String(statsState.likes));
+      renderCommunityStats();
+      const remote = await syncPublicCounter('likes', statsState.liked ? 'up' : 'down');
+      if (remote !== null && remote >= (statsState.liked ? 1 : 0)) {
+        statsState.likes = remote;
+        localStorage.setItem('eme_site_likes', String(remote));
+        renderCommunityStats();
+      }
+    }
+
     renderSelectors();
     renderAll();
+    initCommunityStats();
   </script>
 </body>
 </html>
