@@ -228,7 +228,7 @@ fun MaintenanceHubScreen(
               }
             }
 
-            // 161 Field Workshop Company BAO 35/88 & Amendment 07/04 Reference Chart Card
+            // Bangladesh Army All Vehicles Maintenance Schedule (BAO 35/88 & Amendment 07/04) Reference Chart Card
             Surface(
               shape = MaterialTheme.shapes.medium,
               color = MaterialTheme.colorScheme.surfaceContainer,
@@ -247,7 +247,7 @@ fun MaintenanceHubScreen(
                     Spacer(Modifier.width(8.dp))
                     Column {
                       Text(
-                        text = "১৬১ ফিল্ড ওয়ার্কশপ কোং • BAO 35/88 (০৭/০৪)",
+                        text = "বাংলাদেশ সেনাবাহিনীর সকল যানবাহন মেইনটেনেন্স শিডিউল • BAO 35/88 (০৭/০৪)",
                         style = MaterialTheme.typography.titleSmall,
                         color = CautionAmber,
                       )

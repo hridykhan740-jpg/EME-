@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -27,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -59,10 +62,31 @@ private const val KEY_FOLLOWERS = "site_followers"
 private const val KEY_LIKES = "site_likes"
 private const val KEY_FOLLOWED = "site_followed"
 private const val KEY_LIKED = "site_liked"
+private const val KEY_COMMENTS = "site_comments_v1"
+
+private data class FooterComment(val author: String, val text: String)
+
+private val defaultFooterComments = listOf(
+  FooterComment("মোঃ রাশেদুল ইসলাম", "বাংলাদেশ সেনাবাহিনীর সকল যানবাহনের BAO 35/88 মেইনটেনেন্স শিডিউল ও পার্টস লিস্ট খুবই কার্যকর।"),
+  FooterComment("Tariqul Hasan", "Fast OEM search with Google Image support for Bolyan, TRM 180/240/360 & Pajero."),
+  FooterComment("ইঞ্জিনিয়ার সাকিব", "ফুয়েল ফিল্টার, অল্টারনেটর, স্টার্টার ও ব্রেকের ক্ষুদ্র যন্ত্রাংশগুলো ওয়ার্কশপের জন্য দারুণ সহায়ক।"),
+)
 
 private object FooterVisitTracker {
   var recordedInProcess: Boolean = false
 }
+
+private fun loadStoredComments(raw: String?): List<FooterComment> {
+  if (raw.isNullOrBlank()) return defaultFooterComments
+  val parsed = raw.split("\n").mapNotNull { line ->
+    val idx = line.indexOf('|')
+    if (idx <= 0) null else FooterComment(line.substring(0, idx), line.substring(idx + 1))
+  }
+  return parsed.ifEmpty { defaultFooterComments }
+}
+
+private fun serializeComments(list: List<FooterComment>): String =
+  list.joinToString("\n") { "${it.author.replace("|", " ").replace("\n", " ")}|${it.text.replace("\n", " ")}" }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -80,6 +104,8 @@ fun DeveloperFooterCard(
   var likes by remember { mutableIntStateOf(prefs.getInt(KEY_LIKES, 0)) }
   var isFollowed by remember { mutableStateOf(prefs.getBoolean(KEY_FOLLOWED, false)) }
   var isLiked by remember { mutableStateOf(prefs.getBoolean(KEY_LIKED, false)) }
+  var comments by remember { mutableStateOf(loadStoredComments(prefs.getString(KEY_COMMENTS, null))) }
+  var draftComment by remember { mutableStateOf("") }
 
   LaunchedEffect(Unit) {
     if (!FooterVisitTracker.recordedInProcess) {
@@ -280,6 +306,77 @@ fun DeveloperFooterCard(
             .minimumInteractiveComponentSize()
             .testTag("footer_like_button"),
         )
+      }
+
+      Spacer(Modifier.height(10.dp))
+      Text(
+        text = "মতামত ও কমেন্ট / Comments (${comments.size})",
+        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+        color = TelemetryCyan,
+      )
+      Spacer(Modifier.height(6.dp))
+      Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .testTag("footer_comments_list"),
+      ) {
+        comments.take(4).forEach { item ->
+          Surface(
+            shape = MaterialTheme.shapes.small,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            modifier = Modifier.fillMaxWidth(),
+          ) {
+            Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
+              Text(
+                text = item.author,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = TelemetryCyan,
+              )
+              Text(
+                text = item.text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+              )
+            }
+          }
+        }
+      }
+
+      Spacer(Modifier.height(8.dp))
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+      ) {
+        OutlinedTextField(
+          value = draftComment,
+          onValueChange = { draftComment = it },
+          singleLine = true,
+          placeholder = { Text("বাংলা বা ইংরেজিতে কমেন্ট লিখুন…") },
+          modifier = Modifier
+            .weight(1f)
+            .testTag("footer_comment_input"),
+        )
+        FilledTonalIconButton(
+          onClick = {
+            val clean = draftComment.trim()
+            if (clean.isNotEmpty()) {
+              val updated = listOf(FooterComment("User", clean)) + comments
+              comments = updated.take(25)
+              draftComment = ""
+              prefs.edit().putString(KEY_COMMENTS, serializeComments(comments)).apply()
+            }
+          },
+          modifier = Modifier
+            .minimumInteractiveComponentSize()
+            .testTag("footer_comment_submit_button"),
+        ) {
+          Icon(
+            imageVector = Icons.AutoMirrored.Rounded.Send,
+            contentDescription = "Post comment",
+          )
+        }
       }
     }
   }

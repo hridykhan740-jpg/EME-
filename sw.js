@@ -1,4 +1,4 @@
-const CACHE_NAME = 'eme-autopulse-v5';
+const CACHE_NAME = 'eme-autopulse-v6';
 const PRECACHE_ASSETS = [
   './',
   './index.html',

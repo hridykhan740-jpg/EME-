@@ -197,6 +197,28 @@
     }
     .stat-val { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; color: var(--cyan); }
     .stat-btn.active .stat-val { color: inherit; }
+    .footer-comments {
+      width: 100%; padding-top: 12px; border-top: 1px solid rgba(51, 65, 85, 0.7);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .comment-form {
+      display: grid; grid-template-columns: minmax(130px, 190px) 1fr auto; gap: 8px; align-items: center;
+    }
+    @media (max-width: 640px) {
+      .comment-form { grid-template-columns: 1fr; }
+    }
+    .comment-list {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px;
+    }
+    .comment-item {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 9px 11px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .comment-meta {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.75rem;
+    }
+    .comment-author { font-weight: 700; color: var(--cyan); }
+    .comment-text { color: var(--text); font-size: 0.8rem; line-height: 1.4; }
     /* Illustrated Numbered EPC Chart Styles */
     .epc-banner {
       display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
@@ -372,7 +394,7 @@
         <div class="row">
           <div>
             <strong>Predictive Maintenance Hub • BAO 35/88 (সংশোধনী ০৭/০৪)</strong>
-            <div class="muted" id="bao-vehicle-summary">১৬১ ফিল্ড ওয়ার্কশপ কোং • যানবাহনের শ্রেণি অনুযায়ী তেল, ফিল্টার, কুল্যান্ট ও টায়ার বদলের চার্ট</div>
+            <div class="muted" id="bao-vehicle-summary">বাংলাদেশ সেনাবাহিনীর সকল যানবাহন মেইনটেনেন্স শিডিউল • যানবাহনের শ্রেণি অনুযায়ী তেল, ফিল্টার, কুল্যান্ট ও টায়ার বদলের চার্ট</div>
           </div>
           <span class="pill" id="health-pill">Health 100%</span>
         </div>
@@ -450,6 +472,18 @@
           <span id="stat-like-label">👍 লাইক (Likes):</span>
           <span class="stat-val" id="stat-likes">0</span>
         </button>
+      </div>
+      <div class="footer-comments no-print" aria-label="User Comments in Bengali and English">
+        <div class="row">
+          <strong style="color:var(--cyan); font-size:0.86rem;">💬 কমেন্ট ও মতামত / Comments (<span id="stat-comments-count">4</span>)</strong>
+          <span class="muted" style="font-size:0.74rem;">বাংলা বা ইংরেজিতে মতামত লিখুন</span>
+        </div>
+        <div class="comment-form">
+          <input id="comment-author-input" type="text" maxlength="40" placeholder="আপনার নাম / Your Name" aria-label="Your Name" />
+          <input id="comment-text-input" type="text" maxlength="220" placeholder="বাংলা বা ইংরেজিতে আপনার কমেন্ট লিখুন… / Write your comment…" aria-label="Comment Text" onkeydown="if(event.key==='Enter'){event.preventDefault();postFooterComment();}" />
+          <button type="button" class="btn" onclick="postFooterComment()">পোস্ট / Post</button>
+        </div>
+        <div id="footer-comments-list" class="comment-list"></div>
       </div>
     </footer>
   </main>
@@ -838,7 +872,7 @@
           <div class="card">
             <div class="row">
               <div>
-                <strong style="color:var(--cyan);">১৬১ ফিল্ড ওয়ার্কশপ কোং • BAO 35/88 (সংশোধনী ০৭/০৪) অফিসিয়াল চার্ট</strong>
+                <strong style="color:var(--cyan);">বাংলাদেশ সেনাবাহিনীর সকল যানবাহন মেইনটেনেন্স শিডিউল • BAO 35/88 (সংশোধনী ০৭/০৪)</strong>
                 <div class="muted">ইঞ্জিন অয়েল, ট্রান্সমিশন/ডিফারেন্সিয়াল, তেল ফিল্টার (কাগজ ও ফেল্ট), ফুয়েল ফিল্টার, এয়ার ক্লিনার ও বিশেষ নোট</div>
               </div>
               <button class="btn-outline no-print" onclick="toggleBaoChart()">${state.showBaoChart ? 'চার্ট বন্ধ করুন ▲' : 'সম্পূর্ণ চার্ট দেখুন ▼'}</button>
@@ -1148,9 +1182,58 @@
       }
     }
 
+    const DEFAULT_COMMENTS = [
+      { author:'মোঃ রাশেদুল ইসলাম', lang:'বাংলা', text:'বাংলাদেশ সেনাবাহিনীর BAO 35/88 অনুযায়ী সকল গাড়ির মেইনটেনেন্স শিডিউল ও প্রতিটি ক্ষুদ্র যন্ত্রাংশের OEM নাম্বার এখানে একসাথে পাওয়া খুব উপকারী।' },
+      { author:'Tariqul Hasan', lang:'English', text:'Very fast OEM parts lookup with Google Image verification. Having Bolyan, TRM 180/240/360, Pajero, and Outlander sub-parts makes workshop planning effortless.' },
+      { author:'ইঞ্জিনিয়ার সাকিব আহমেদ', lang:'বাংলা', text:'ফুয়েল ফিল্টার, অল্টারনেটর, স্টার্টার মোটর ও ব্রেকিং সিস্টেমের ক্ষুদ্র যন্ত্রাংশ এবং PDF তালিকা প্রিন্ট অপশন ওয়ার্কশপের কাজের গতি অনেক বাড়িয়ে দিয়েছে।' },
+      { author:'Farhan Chowdhury', lang:'English', text:'Clean offline-ready catalog for Bangladesh fleet & passenger cars. Every assembly number and BAO interval chart is crystal clear.' }
+    ];
+
+    function loadFooterComments() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('eme_footer_comments') || 'null');
+        if (Array.isArray(saved) && saved.length) return saved;
+      } catch (_) {}
+      return DEFAULT_COMMENTS.slice();
+    }
+
+    let footerComments = loadFooterComments();
+
+    function renderFooterComments() {
+      const listEl = document.getElementById('footer-comments-list');
+      const countEl = document.getElementById('stat-comments-count');
+      if (countEl) countEl.textContent = String(footerComments.length);
+      if (!listEl) return;
+      listEl.innerHTML = footerComments.map(c => `
+        <div class="comment-item">
+          <div class="comment-meta">
+            <span class="comment-author">${esc(c.author)}</span>
+            <span class="pill">${esc(c.lang || 'বাংলা/EN')}</span>
+          </div>
+          <div class="comment-text">${esc(c.text)}</div>
+        </div>
+      `).join('');
+    }
+
+    function postFooterComment() {
+      const nameInput = document.getElementById('comment-author-input');
+      const textInput = document.getElementById('comment-text-input');
+      if (!textInput) return;
+      const text = textInput.value.trim();
+      if (!text) return;
+      const author = (nameInput && nameInput.value.trim()) || 'Guest User';
+      const hasBn = /[\u0980-\u09FF]/.test(text);
+      const lang = hasBn ? 'বাংলা' : 'English';
+      footerComments = [{ author, lang, text }, ...footerComments].slice(0, 30);
+      localStorage.setItem('eme_footer_comments', JSON.stringify(footerComments));
+      textInput.value = '';
+      renderFooterComments();
+    }
+
     renderSelectors();
     renderAll();
     initCommunityStats();
+    renderFooterComments();
   </script>
 </body>
 </html>
