@@ -24,7 +24,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -80,8 +80,10 @@ import com.example.model.PartSubComponent
 import com.example.model.SavedPart
 import com.example.model.UserVehicle
 import com.example.ui.components.ActiveVehicleBanner
+import com.example.ui.components.EpcCalloutBadge
 import com.example.ui.components.PartVisualIdentifier
 import com.example.ui.components.StockStatusBadge
+import com.example.ui.components.inferSubPartVisualKind
 import com.example.ui.components.systemAccentColor
 import com.example.ui.components.systemIcon
 import com.example.ui.theme.RacingOrange
@@ -204,7 +206,7 @@ fun PartsCatalogScreen(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-              text = "${allParts.size} Assemblies & $totalSubParts Sub-Parts across 12 Vehicle Systems",
+              text = "${allParts.size} Assemblies & $totalSubParts Sub-Parts (${allParts.size + totalSubParts} Total Parts)",
               style = MaterialTheme.typography.bodySmall,
               color = Color(0xFFCBD5E1),
             )
@@ -335,9 +337,10 @@ fun PartsCatalogScreen(
           }
         }
       } else {
-        items(filteredParts, key = { it.id }) { part ->
+        itemsIndexed(filteredParts, key = { _, part -> part.id }) { idx, part ->
           val savedRecord = savedByPartId[part.id]
           CatalogPartCard(
+            calloutNumber = idx + 1,
             part = part,
             isSaved = savedRecord != null,
             onCardClick = {
@@ -438,6 +441,7 @@ private fun SystemHierarchyChip(
 
 @Composable
 private fun CatalogPartCard(
+  calloutNumber: Int,
   part: CatalogPart,
   isSaved: Boolean,
   onCardClick: () -> Unit,
@@ -463,11 +467,18 @@ private fun CatalogPartCard(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
       ) {
-        PartVisualIdentifier(
-          visualKind = part.visualKind,
-          system = part.system,
-          size = 64.dp,
-        )
+        Box {
+          PartVisualIdentifier(
+            visualKind = part.visualKind,
+            system = part.system,
+            size = 64.dp,
+          )
+          EpcCalloutBadge(
+            number = calloutNumber,
+            accent = accent,
+            modifier = Modifier.align(Alignment.TopStart).padding(2.dp),
+          )
+        }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
           Row(
@@ -599,6 +610,14 @@ private fun CatalogPartCard(
               modifier = Modifier.fillMaxWidth(),
               verticalAlignment = Alignment.CenterVertically,
             ) {
+              EpcCalloutBadge(number = idx + 1, accent = accent)
+              Spacer(Modifier.width(8.dp))
+              PartVisualIdentifier(
+                visualKind = inferSubPartVisualKind(sub.name, part.visualKind),
+                system = part.system,
+                size = 44.dp,
+              )
+              Spacer(Modifier.width(8.dp))
               Column(modifier = Modifier.weight(1f)) {
                 Text("${sub.name} (${sub.quantity})", style = MaterialTheme.typography.labelMedium)
                 Text(

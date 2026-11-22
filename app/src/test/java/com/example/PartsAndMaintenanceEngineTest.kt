@@ -61,7 +61,7 @@ class PartsAndMaintenanceEngineTest {
       "Corolla Axio", "Corolla Fielder", "Allion", "Premio", "Probox", "Aqua", "Prius",
       "Civic", "Grace", "Fit", "Sunny", "Note", "Lancer EX", "Axela", "Demio", "Swift",
       "Land Cruiser Prado", "Land Cruiser V8 / 300", "Harrier", "Vezel", "HR-V",
-      "Outlander", "X-Trail", "Tucson", "Sportage", "ZS", "H6",
+      "Outlander", "Pajero", "X-Trail", "Tucson", "Sportage", "ZS", "H6", "Hexa",
       "Noah", "Voxy", "Alphard", "HiAce", "Serena", "Delica",
       "Hilux", "Dyna", "L200", "Fuso Canter", "Ace", "Intra", "Xenon", "LPT 1615",
       "Prima", "Dost", "Ecomet", "Viking", "Bolero Pickup", "Jeeto", "D-Max", "N-Series",
@@ -74,6 +74,12 @@ class PartsAndMaintenanceEngineTest {
         modelNames.any { it.contains(expected, ignoreCase = true) },
       )
     }
+
+    val pajero = bdModels.first { it.brand == "Mitsubishi" && it.model.contains("Pajero", ignoreCase = true) }
+    val pajeroVariants = pajero.variants.joinToString(" ")
+    listOf("V93", "V94", "V96", "V98").forEach { code ->
+      assertTrue("Missing Pajero chassis $code", pajeroVariants.contains(code, ignoreCase = true))
+    }
   }
 
   @Test
@@ -81,6 +87,8 @@ class PartsAndMaintenanceEngineTest {
     val axioParts = PartsCatalogEngine.generateCatalogForVehicle(sampleAxioBd)
     val coveredSystems = axioParts.map { it.system }.toSet()
     assertEquals(CatalogSystem.entries.toSet(), coveredSystems)
+    val totalPartsCount = axioParts.size + axioParts.sumOf { it.subComponents.size }
+    assertTrue("Expected 1000+ parts per vehicle, got $totalPartsCount", totalPartsCount >= 1000)
 
     val oilFilterAssembly = axioParts.first { it.id == "eng_oil_filter" }
     assertTrue(oilFilterAssembly.epcCatalogRef.contains("Toyota EPC"))

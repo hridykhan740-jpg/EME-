@@ -1,7 +1,8 @@
-const CACHE_NAME = 'eme-autopulse-v2';
+const CACHE_NAME = 'eme-autopulse-v3';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
+  './epc-data.js',
   './manifest.webmanifest',
   './public/assets/aistudio/IMG-20261118-WA0034_6a1f08ae.jpg',
   './public/assets/aistudio/1786682391571_14704b07.png'

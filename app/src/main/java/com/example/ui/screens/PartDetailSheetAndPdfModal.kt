@@ -54,8 +54,10 @@ import com.example.local.LocalPdfCartItemEntity
 import com.example.model.CatalogPart
 import com.example.model.PartSubComponent
 import com.example.model.UserVehicle
+import com.example.ui.components.EpcCalloutBadge
 import com.example.ui.components.PartVisualIdentifier
 import com.example.ui.components.StockStatusBadge
+import com.example.ui.components.inferSubPartVisualKind
 import com.example.ui.components.systemAccentColor
 import com.example.ui.theme.OemEmerald
 import com.example.ui.theme.RacingOrange
@@ -160,7 +162,7 @@ fun PartDetailModalSheet(
                 color = TelemetryCyan,
               )
             }
-            part.subComponents.forEach { sub ->
+            part.subComponents.forEachIndexed { idx, sub ->
               Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
@@ -170,6 +172,14 @@ fun PartDetailModalSheet(
                   modifier = Modifier.padding(10.dp),
                   verticalAlignment = Alignment.CenterVertically,
                 ) {
+                  EpcCalloutBadge(number = idx + 1, accent = systemAccentColor(part.system))
+                  Spacer(Modifier.width(8.dp))
+                  PartVisualIdentifier(
+                    visualKind = inferSubPartVisualKind(sub.name, part.visualKind),
+                    system = part.system,
+                    size = 46.dp,
+                  )
+                  Spacer(Modifier.width(10.dp))
                   Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(sub.name, style = MaterialTheme.typography.labelLarge)
                     Text(

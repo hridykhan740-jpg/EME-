@@ -173,6 +173,57 @@
       justify-content: center; text-decoration: none; transition: border-color 0.15s, transform 0.15s;
     }
     .social-icon-btn:hover { border-color: var(--cyan); transform: translateY(-1px); }
+    /* Illustrated Numbered EPC Chart Styles */
+    .epc-banner {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+      background: linear-gradient(90deg, #facc15 0%, #fbbf24 100%);
+      color: #0f172a; padding: 9px 14px; border-radius: 12px; font-weight: 800;
+      margin-bottom: 12px; box-shadow: 0 4px 14px rgba(250, 204, 21, 0.18);
+    }
+    .epc-banner-sub { font-size: 0.78rem; font-weight: 700; color: #1e293b; }
+    .epc-mode-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .epc-mode-btn {
+      background: var(--surface-2); color: var(--muted); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 11px; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+    }
+    .epc-mode-btn.active { background: rgba(250, 204, 21, 0.2); color: #fde047; border-color: #facc15; }
+    .epc-plate-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 10px;
+    }
+    .epc-card {
+      background: rgba(17, 24, 39, 0.9); border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .epc-top { display: flex; gap: 10px; align-items: flex-start; }
+    .epc-thumb {
+      width: 64px; height: 64px; flex-shrink: 0; border-radius: 10px;
+      background: #f8fafc; border: 1px solid #cbd5e1;
+      display: flex; align-items: center; justify-content: center; padding: 4px;
+    }
+    .epc-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 24px; height: 24px; padding: 0 5px; border-radius: 999px;
+      background: #0f172a; color: #facc15; border: 1.5px solid #facc15;
+      font-size: 0.75rem; font-weight: 900; flex-shrink: 0;
+    }
+    .epc-sub-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;
+      margin-top: 8px;
+    }
+    .epc-sub-card {
+      background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(51, 65, 85, 0.85);
+      border-radius: 10px; padding: 8px; display: flex; gap: 8px; align-items: center;
+    }
+    .epc-sub-thumb {
+      width: 48px; height: 48px; flex-shrink: 0; border-radius: 8px;
+      background: #f8fafc; border: 1px solid #cbd5e1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .epc-sub-thumb svg { width: 40px; height: 40px; }
+    .pager {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 10px; margin-top: 12px;
+    }
     @media print {
       header, .no-print { display: none !important; }
       body { background: #fff; color: #000; }
@@ -220,7 +271,7 @@
       </div>
 
       <div style="margin-bottom: 10px;">
-        <input id="vin-search" type="text" placeholder="Quick VIN / JDM Frame (e.g. NKE165, NZT260, ZWR80, JTD) or Model (Premio, HiAce, Hino AK1J)…" oninput="onVinSearch(this.value)" />
+        <input id="vin-search" type="text" placeholder="Quick VIN / Chassis (e.g. V93, V94, V96, V98, GDJ150, FJA300, HEXA, NKE165) or Model (Land Cruiser, Prado, Pajero, Tata Hexa)…" oninput="onVinSearch(this.value)" />
         <div id="vin-hits" class="hit-list" style="display:none;"></div>
       </div>
 
@@ -255,13 +306,19 @@
       <div class="card no-print">
         <div class="row" style="gap: 8px;">
           <div style="flex:1; min-width:220px;">
-            <input id="part-search" type="search" placeholder="Instant search assembly, sub-part, or OEM # (e.g. O-ring, crush washer, 90915)…" oninput="onPartSearch(this.value)" />
+            <input id="part-search" type="search" placeholder="Instant search 1,152 parts, OEM # or assembly (e.g. O-ring, 90915, V94, piston, rotor, ball joint)…" oninput="onPartSearch(this.value)" />
           </div>
-          <span class="muted" id="parts-counter">0 assemblies</span>
+          <div class="epc-mode-bar">
+            <button id="mode-assemblies" class="epc-mode-btn active" onclick="setViewMode('assemblies')">72 Assemblies</button>
+            <button id="mode-all" class="epc-mode-btn" onclick="setViewMode('all')">All 1,152 Parts Chart</button>
+          </div>
+          <span class="muted" id="parts-counter">1,152 parts</span>
         </div>
         <div class="chips" id="system-chips" style="margin-top:8px;"></div>
       </div>
-      <div id="parts-grid" class="grid"></div>
+      <div id="epc-banner-slot"></div>
+      <div id="parts-grid"></div>
+      <div id="parts-pager" class="pager no-print"></div>
     </section>
 
     <!-- Tab: Predictive Maintenance -->
@@ -337,83 +394,19 @@
     </footer>
   </main>
 
+  <script src="./epc-data.js"></script>
   <script>
-    const CATEGORIES = [
-      { id: 'ALL', label: 'All BD Fleet' },
-      { id: 'SEDAN', label: 'Sedans & Hatch' },
-      { id: 'SUV', label: 'SUVs & 4x4' },
-      { id: 'MPV', label: 'MPVs & Vans' },
-      { id: 'COMMERCIAL', label: 'Commercial Trucks & Buses' }
-    ];
-
-    const VEHICLES = [
-      // Private Sedans & Hatchbacks
-      { cat:'SEDAN', brand:'Toyota', model:'Corolla Axio', chassis:'NKE165 / NZE161', pt:'HYBRID', years:[2025,2024,2023,2022,2021,2020,2019,2018,2016,2014] },
-      { cat:'SEDAN', brand:'Toyota', model:'Corolla Fielder', chassis:'NKE165G / NZE161G', pt:'HYBRID', years:[2025,2023,2021,2019,2017,2015] },
-      { cat:'SEDAN', brand:'Toyota', model:'Premio', chassis:'NZT260 / ZRT260', pt:'PETROL', years:[2022,2021,2020,2019,2018,2016,2014] },
-      { cat:'SEDAN', brand:'Toyota', model:'Allion', chassis:'NZT260 / ZRT260', pt:'PETROL', years:[2022,2021,2020,2018,2016,2014] },
-      { cat:'SEDAN', brand:'Toyota', model:'Corolla Cross', chassis:'ZVG11 / ZSG10', pt:'HYBRID', years:[2026,2025,2024,2023,2022,2021] },
-      { cat:'SEDAN', brand:'Toyota', model:'Camry', chassis:'AXVH70 / AXVA70', pt:'HYBRID', years:[2026,2024,2022,2020,2018] },
-      { cat:'SEDAN', brand:'Toyota', model:'Yaris / Vitz', chassis:'NSP151 / KSP130', pt:'PETROL', years:[2025,2023,2021,2019,2017] },
-      { cat:'SEDAN', brand:'Toyota', model:'Aqua / Prius', chassis:'NHP10 / MXPK11 / ZVW50', pt:'HYBRID', years:[2026,2024,2022,2020,2018,2016] },
-      { cat:'SEDAN', brand:'Toyota', model:'Ist / Probox / Succeed', chassis:'NCP110 / NCP160V / NHP160V', pt:'PETROL', years:[2025,2022,2020,2018,2015] },
-      { cat:'SEDAN', brand:'Honda', model:'Civic / Grace / City', chassis:'FC1 / GM4 / GN2', pt:'HYBRID', years:[2026,2024,2022,2020,2018,2016] },
-      { cat:'SEDAN', brand:'Honda', model:'Fit / Insight / Accord', chassis:'GP5 / GR3 / ZE4 / CV3', pt:'HYBRID', years:[2026,2023,2021,2019,2017] },
-      { cat:'SEDAN', brand:'Nissan', model:'Sunny / Sylphy / Tiida / Note', chassis:'N17 / TB17 / C11 / HE12', pt:'HYBRID', years:[2025,2022,2020,2018,2016] },
-      { cat:'SEDAN', brand:'Mitsubishi', model:'Lancer EX / Attrage / Mirage', chassis:'CY3A / A13A / A03A', pt:'PETROL', years:[2024,2021,2019,2017,2015] },
-      { cat:'SEDAN', brand:'Mazda', model:'Axela / Demio', chassis:'BM5FP / DJ3FS', pt:'PETROL', years:[2024,2021,2019,2017,2015] },
-      { cat:'SEDAN', brand:'Hyundai', model:'Elantra / Sonata / Accent', chassis:'CN7 / DN8 / HC', pt:'PETROL', years:[2026,2024,2022,2020,2018] },
-      { cat:'SEDAN', brand:'Suzuki', model:'Swift / Alto / WagonR / Dzire', chassis:'ZC83S / HA36S / MH55S', pt:'HYBRID', years:[2026,2024,2022,2020,2018] },
-      // SUVs & 4x4s
-      { cat:'SUV', brand:'Toyota', model:'Land Cruiser Prado / V8 300', chassis:'GDJ150 / TRJ150 / J300', pt:'DIESEL', years:[2026,2024,2022,2020,2018,2016] },
-      { cat:'SUV', brand:'Toyota', model:'Harrier / RAV4 / Rush / Fortuner / C-HR', chassis:'AXUH80 / XA50 / GUN156 / ZYX10', pt:'HYBRID', years:[2026,2024,2022,2020,2018] },
-      { cat:'SUV', brand:'Honda', model:'Vezel / HR-V / CR-V', chassis:'RU3 / RV5 / RW2', pt:'HYBRID', years:[2026,2024,2022,2020,2018,2016] },
-      { cat:'SUV', brand:'Mitsubishi', model:'Outlander / Pajero / Eclipse Cross / ASX', chassis:'GF8W / KS1W / GK1W', pt:'DIESEL', years:[2026,2024,2022,2020,2018] },
-      { cat:'SUV', brand:'Nissan', model:'X-Trail / Juke / Patrol', chassis:'NT32 / T33 / YF15 / Y62', pt:'HYBRID', years:[2026,2024,2022,2020,2018] },
-      { cat:'SUV', brand:'Hyundai', model:'Tucson / Santa Fe / Creta', chassis:'NX4 / TM / SU2', pt:'HYBRID', years:[2026,2024,2022,2020,2018] },
-      { cat:'SUV', brand:'Kia', model:'Sportage / Sorento', chassis:'NQ5 / MQ4', pt:'HYBRID', years:[2026,2024,2022,2020] },
-      { cat:'SUV', brand:'MG', model:'ZS / HS', chassis:'ZS11 / AS23', pt:'PETROL', years:[2026,2024,2022,2020] },
-      { cat:'SUV', brand:'Haval', model:'H6 / Jolion', chassis:'B01-HEV / A01', pt:'HYBRID', years:[2026,2024,2022] },
-      // MPVs & Vans
-      { cat:'MPV', brand:'Toyota', model:'Noah / Voxy / Esquire', chassis:'ZWR80 / ZRR80 / ZWR90', pt:'HYBRID', years:[2026,2024,2022,2020,2018,2016] },
-      { cat:'MPV', brand:'Toyota', model:'Alphard / Vellfire', chassis:'AYH30 / AGH30', pt:'HYBRID', years:[2026,2024,2022,2020,2018] },
-      { cat:'MPV', brand:'Toyota', model:'HiAce / LiteAce / Avanza / Sienta', chassis:'TRH200 / GDH200 / NHP170G', pt:'DIESEL', years:[2026,2024,2022,2020,2018,2015] },
-      { cat:'MPV', brand:'Nissan', model:'Serena / Caravan / NV200', chassis:'HFC27 / E26 / M20', pt:'HYBRID', years:[2026,2023,2021,2019,2017] },
-      { cat:'MPV', brand:'Mitsubishi', model:'Delica D:5 / Xpander', chassis:'CV1W / NC1W', pt:'DIESEL', years:[2026,2023,2021,2019] },
-      // Commercial Trucks, Pickups & Buses
-      { cat:'COMMERCIAL', brand:'Toyota', model:'Hilux / Dyna', chassis:'GUN126 / XZU600', pt:'DIESEL', years:[2026,2024,2022,2020,2018,2015] },
-      { cat:'COMMERCIAL', brand:'Mitsubishi', model:'L200 / Fuso Canter', chassis:'KL1T / FE70', pt:'DIESEL', years:[2026,2023,2020,2018,2015] },
-      { cat:'COMMERCIAL', brand:'Tata', model:'Ace / Intra / Xenon / LPT 1615 / Prima', chassis:'ACE-GOLD / LPT1615 / PRIMA-LX', pt:'DIESEL', years:[2026,2024,2022,2020,2017] },
-      { cat:'COMMERCIAL', brand:'Ashok Leyland', model:'Dost / Ecomet / Viking', chassis:'DOST-LCV / ECOMET-1615 / VIKING-BUS', pt:'DIESEL', years:[2026,2023,2020,2018] },
-      { cat:'COMMERCIAL', brand:'Mahindra', model:'Bolero Pickup / Jeeto', chassis:'BOLERO-PU / JEETO-X7', pt:'DIESEL', years:[2026,2023,2020,2018] },
-      { cat:'COMMERCIAL', brand:'Isuzu', model:'D-Max / N-Series', chassis:'RG01 / NKR85', pt:'DIESEL', years:[2026,2024,2021,2018] },
-      { cat:'COMMERCIAL', brand:'Hino', model:'AK1J / RM2 / 300-500 Series', chassis:'AK1JR / RM2PSS / FC9J', pt:'DIESEL', years:[2026,2023,2020,2017] },
-      { cat:'COMMERCIAL', brand:'Eicher', model:'Pro 2049 / 3015 / Skyline', chassis:'PRO-3015', pt:'DIESEL', years:[2026,2023,2020,2018] }
-    ];
-
-    const BRAND_CODES = {
-      Toyota: { epc:'Toyota EPC', oil:'90915-YZZF2', air:'17801-21060', fuel:'77024-52170', cabin:'87139-52040', pad:'04465-52320', rotor:'43512-52130', spark:'90919-01275', clutch:'31210-12281', rack:'45510-12450', rad:'16400-21300', ac:'88310-02710', exh:'17410-21B30' },
-      Honda: { epc:'Honda EPC', oil:'15400-RTA-003', air:'17220-5R0-008', fuel:'17048-T7A-000', cabin:'80291-T5A-J01', pad:'45022-T7J-H00', rotor:'45251-T7A-000', spark:'12290-5R0-003', clutch:'22105-RNA-305', rack:'53601-T7J-H01', rad:'19010-5R0-003', ac:'38810-5R8-J01', exh:'18160-5R0-000' },
-      Mitsubishi: { epc:'Mitsubishi ASA / Fuso EPC', oil:'MZ690070', air:'1500A513', fuel:'1770A233', cabin:'7803A043', pad:'4605B005', rotor:'4615A178', spark:'1822A086', clutch:'2304A075', rack:'4410A453', rad:'1350A297', ac:'7813A618', exh:'1570C312' },
-      Nissan: { epc:'Nissan FAST EPC', oil:'15208-65F0E', air:'16546-4BA1A', fuel:'16400-4BA0A', cabin:'27277-4BA0A', pad:'D1060-4BA0A', rotor:'40206-4BA0A', spark:'22401-ED815', clutch:'30100-ED80A', rack:'49001-4BA0A', rad:'21410-4BA0A', ac:'92600-4BA0A', exh:'20010-4BA0A' },
-      Tata: { epc:'Tata Commercial EPC', oil:'2790-1813-0102', air:'5442-0913-0101', fuel:'2786-0911-0114', cabin:'5438-8340-0104', pad:'2702-4210-0118', rotor:'2702-4210-0104', spark:'2791-1511-0103', clutch:'2651-2520-0101', rack:'2641-4620-0102', rad:'2525-5010-0105', ac:'5438-8340-0210', exh:'2525-4920-0108' },
-      'Ashok Leyland': { epc:'Ashok Leyland EPC', oil:'F8835100', air:'2786-0913-0101', fuel:'2786-0911-0114', cabin:'AL-CAB-104', pad:'AL-BRK-118', rotor:'AL-DSC-104', spark:'AL-GLW-103', clutch:'AL-CLT-101', rack:'AL-STR-102', rad:'AL-RAD-105', ac:'AL-AC-210', exh:'AL-EXH-108' },
-      Hino: { epc:'Hino EPC Commercial', oil:'15607-2190', air:'17801-E0010', fuel:'23401-1730', cabin:'S8850-E0020', pad:'04465-E0050', rotor:'43512-E0020', spark:'19110-1220', clutch:'31210-E0410', rack:'44110-E0120', rad:'16090-E0040', ac:'88310-E0060', exh:'17401-E0220' }
-    };
-
-    const SYSTEMS = [
-      'Engine','Fuel & Air','Transmission','Clutch','Suspension','Steering',
-      'Brakes','Cooling','AC / HVAC','Electrical','Exhaust','Body & Interior'
-    ];
-
     let state = {
       tab: 'catalog',
       cat: 'ALL',
       vehicleIdx: 0,
+      variantIdx: 0,
       year: 2022,
       odo: 39500,
       sys: 'ALL',
       query: '',
+      viewMode: 'assemblies',
+      page: 0,
       expanded: {},
       pdfCart: JSON.parse(localStorage.getItem('eme_pdf_cart') || '[]'),
       logs: JSON.parse(localStorage.getItem('eme_service_logs') || '{}'),
@@ -422,147 +415,6 @@
 
     function esc(s) {
       return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    }
-
-    function getCodes(brand) {
-      return BRAND_CODES[brand] || {
-        epc: brand + ' Official EPC',
-        oil: brand.slice(0,3).toUpperCase() + '-1540-901',
-        air: brand.slice(0,3).toUpperCase() + '-1780-412',
-        fuel: brand.slice(0,3).toUpperCase() + '-2330-510',
-        cabin: brand.slice(0,3).toUpperCase() + '-8713-220',
-        pad: brand.slice(0,3).toUpperCase() + '-4502-310',
-        rotor: brand.slice(0,3).toUpperCase() + '-4351-608',
-        spark: brand.slice(0,3).toUpperCase() + '-9091-771',
-        clutch: brand.slice(0,3).toUpperCase() + '-3121-204',
-        rack: brand.slice(0,3).toUpperCase() + '-4551-308',
-        rad: brand.slice(0,3).toUpperCase() + '-1640-611',
-        ac: brand.slice(0,3).toUpperCase() + '-8831-409',
-        exh: brand.slice(0,3).toUpperCase() + '-1741-522'
-      };
-    }
-
-    const CATALOG_CACHE = new Map();
-
-    function buildCatalog(v) {
-      const cacheKey = `${v.brand}|${v.model}|${v.chassis}|${v.pt}`;
-      if (CATALOG_CACHE.has(cacheKey)) return CATALOG_CACHE.get(cacheKey);
-      const c = getCodes(v.brand);
-      const p = v.brand.slice(0,3).toUpperCase();
-      const items = [
-        {
-          id:'eng_oil', sys:'Engine', name:'Engine Oil Filter Assembly (Complete Kit)', oem:c.oil, alt:'DENSO 150-2002 / VIC C-110', epc:c.epc + ' Fig. 15-02', price:14.5, task:'oil',
-          subs:[
-            { id:'s_elm', name:'Filter Element / Pleated Cartridge', oem:c.oil + '-ELM', qty:'1 pc', price:7.5, spec:'20-micron synthetic pleats' },
-            { id:'s_org', name:'Viton Housing Rubber O-Ring / Seal', oem:p + '-90301-68005', qty:'1 pc', price:2.2, spec:'Pre-oil Viton seal' },
-            { id:'s_wsh', name:'Oil Pan Drain Plug Crush Washer / Gasket', oem:p + '-90430-12031', qty:'1 pc', price:1.25, spec:'Single-use 12mm crush washer' },
-            { id:'s_cap', name:'Oil Filter Housing Cap', oem:p + '-15620-37010', qty:'1 pc', price:18.0, spec:'64mm 14-flute PA66 cap' },
-            { id:'s_val', name:'Center Bolt & Bypass Relief Valve', oem:p + '-15609-21020', qty:'1 pc', price:4.9, spec:'1.0 bar cold bypass valve' }
-          ]
-        },
-        {
-          id:'eng_spark', sys:'Engine', name: v.pt==='DIESEL' ? 'Ceramic Glow Plug Kit (4x)' : 'Laser Iridium Spark Plug Kit (4x)', oem:c.spark, alt:'NGK / DENSO Iridium', epc:c.epc + ' Fig. 19-01', price:68.0, task:'spark',
-          subs:[
-            { id:'s_sp1', name:'Plug Core Set (4x)', oem:c.spark, qty:'4 pcs', price:58.0, spec:'Pre-gapped 1.1mm factory spec' },
-            { id:'s_sp2', name:'Dielectric Coil Boot Set', oem:p + '-90919-11009', qty:'4 pcs', price:14.0, spec:'Silicone arc insulator' },
-            { id:'s_sp3', name:'Valve Cover & Spark Tube Seal', oem:p + '-11213-21020', qty:'1 set', price:16.5, spec:'Stops oil in plug wells' }
-          ]
-        },
-        {
-          id:'ful_air', sys:'Fuel & Air', name:'Engine Intake Air Filter & Fuel Separator Kit', oem:c.air, alt:'MANN C28043 / DENSO', epc:c.epc + ' Fig. 17-03', price:24.9, task:'air',
-          subs:[
-            { id:'s_ar1', name:'Pleated Air Filter Element', oem:c.air, qty:'1 pc', price:19.5, spec:'99.5% urban dust retention' },
-            { id:'s_ar2', name:'Fuel Filter / Water Separator Cartridge', oem:c.fuel, qty:'1 pc', price:28.0, spec:'2-micron CRDi / EFI safe' },
-            { id:'s_ar3', name:'Airbox Foam Perimeter Seal & MAF O-Ring', oem:p + '-17816-21010', qty:'1 kit', price:4.8, spec:'Prevents unfiltered dust bypass' }
-          ]
-        },
-        {
-          id:'trn_kit', sys:'Transmission', name:'Transmission / eCVT Fluid & Pan Strainer Kit', oem:p + '-35330-73010', alt:'AISIN ATF-FE4 / MAHLE', epc:c.epc + ' Fig. 35-03', price:58.5, task:'trn',
-          subs:[
-            { id:'s_tr1', name:'Internal Stainless Mesh Strainer', oem:p + '-35330-73010', qty:'1 pc', price:26.0, spec:'OEM fine screen' },
-            { id:'s_tr2', name:'Molded Viton Pan Gasket + Magnets', oem:p + '-35168-21011', qty:'1 kit', price:15.0, spec:'Zero-leak pan seal' },
-            { id:'s_tr3', name:'Drain & Overflow Crush Washers', oem:p + '-90430-18008', qty:'2 pcs', price:3.5, spec:'18mm aluminum ring' }
-          ]
-        },
-        {
-          id:'clt_kit', sys:'Clutch', name:'3-Piece Clutch Cover, Disc & Release Bearing Kit', oem:c.clutch, alt:'AISIN / EXEDY / LUK', epc:c.epc + ' Fig. 31-01', price:198.0, task:'clt',
-          subs:[
-            { id:'s_cl1', name:'Torsion-Damped Clutch Friction Disc', oem:c.clutch + '-DSC', qty:'1 pc', price:78.0, spec:'Copper-weave organic facing' },
-            { id:'s_cl2', name:'Diaphragm Pressure Plate Cover', oem:c.clutch + '-COV', qty:'1 pc', price:84.0, spec:'Nodular cast iron pressure ring' },
-            { id:'s_cl3', name:'Hydraulic Throwout / Release Bearing', oem:p + '-31230-12191', qty:'1 pc', price:34.0, spec:'Koyo sealed ball bearing' },
-            { id:'s_cl4', name:'Clutch Slave Cylinder Seal Kit', oem:p + '-31470-12140', qty:'1 kit', price:22.0, spec:'EPDM piston cups' }
-          ]
-        },
-        {
-          id:'sus_kit', sys:'Suspension', name:'Gas Front Strut, Control Arm & Ball Joint Assembly', oem:p + '-48510-8Z310', alt:'KYB / SANKEI 555 / CTR', epc:c.epc + ' Fig. 48-03', price:132.0, task:'sus',
-          subs:[
-            { id:'s_su1', name:'KYB / OEM Twin-Tube Strut Cartridge', oem:p + '-48510-8Z310', qty:'1 pc', price:88.0, spec:'BD rough-road valving' },
-            { id:'s_su2', name:'Lower Control Arm Ball Joint & Bushing', oem:p + '-43330-19245', qty:'1 kit', price:42.0, spec:'555 Japan hardened ball stud' },
-            { id:'s_su3', name:'Upper Strut Mount Bearing & Dust Boot', oem:p + '-48609-12570', qty:'1 kit', price:29.0, spec:'Protects chrome damper shaft' }
-          ]
-        },
-        {
-          id:'str_kit', sys:'Steering', name:'EPS / Hydraulic Steering Rack & Tie-Rod Assembly', oem:c.rack, alt:'JTEKT / TRW / 555', epc:c.epc + ' Fig. 45-05', price:310.0, task:'str',
-          subs:[
-            { id:'s_st1', name:'Outer Tie-Rod End Pair (LH/RH)', oem:p + '-45046-19415', qty:'1 pair', price:32.0, spec:'Pre-greased ball joint' },
-            { id:'s_st2', name:'Inner Steering Rack End Axial Joint', oem:p + '-45503-19255', qty:'1 pair', price:38.0, spec:'Heavy-duty socket joint' },
-            { id:'s_st3', name:'Rack Bellows Dust Boot + Clamps', oem:p + '-45535-12100', qty:'1 pair', price:14.5, spec:'Ozone & flood resistant' }
-          ]
-        },
-        {
-          id:'brk_kit', sys:'Brakes', name:'Ceramic Brake Pad, Vented Rotor & DOT 4 Kit', oem:c.pad, alt:'AKEBONO / DIXCEL / SEIKEN', epc:c.epc + ' Fig. 47-05', price:64.0, task:'brk',
-          subs:[
-            { id:'s_br1', name:'Ceramic Low-Dust Pad Set (4x)', oem:c.pad, qty:'4 pads', price:48.0, spec:'Copper-free Akebono grade' },
-            { id:'s_br2', name:'UV-Coated Vented Rotor Pair', oem:c.rotor, qty:'2 pcs', price:124.0, spec:'High-carbon anti-warp disc' },
-            { id:'s_br3', name:'Stainless Shim, Clip & Slide Pin Boot Kit', oem:p + '-04945-52150', qty:'1 kit', price:19.0, spec:'Eliminates brake squeal' },
-            { id:'s_br4', name:'DOT 4 LV Class-6 Brake Fluid (1L)', oem:p + '-08823-80112', qty:'1 btl', price:16.5, spec:'265°C dry boiling point' }
-          ]
-        },
-        {
-          id:'col_kit', sys:'Cooling', name:'Aluminum Radiator, Thermostat & Water Pump Kit', oem:c.rad, alt:'DENSO / KOYORAD / AISIN', epc:c.epc + ' Fig. 16-03', price:164.0, task:'col',
-          subs:[
-            { id:'s_co1', name:'Aluminum Core Radiator', oem:c.rad, qty:'1 pc', price:118.0, spec:'22mm tropical louver fins' },
-            { id:'s_co2', name:'82°C Wax Thermostat + 108 kPa Cap', oem:p + '-90916-03136', qty:'1 kit', price:28.0, spec:'Gridlock boil-over margin' },
-            { id:'s_co3', name:'Water Pump + MLS Metal Gasket', oem:p + '-161A0-29015', qty:'1 pc', price:88.0, spec:'Carbon-ceramic seal' }
-          ]
-        },
-        {
-          id:'hvc_kit', sys:'AC / HVAC', name:'AC Compressor, Expansion Valve & PM2.5 HEPA Filter', oem:c.ac, alt:'DENSO CoolGear DCC1014', epc:c.epc + ' Fig. 87-14', price:245.0, task:'ac',
-          subs:[
-            { id:'s_hv1', name:'Activated Carbon PM2.5 Cabin Filter', oem:c.cabin, qty:'1 pc', price:22.5, spec:'99.1% Dhaka smog filtration' },
-            { id:'s_hv2', name:'OEM AC Compressor Assembly', oem:c.ac, qty:'1 pc', price:215.0, spec:'High-ambient tropical clutch' },
-            { id:'s_hv3', name:'TXV Expansion Valve & Drier Bag', oem:p + '-88515-52080', qty:'1 kit', price:39.0, spec:'Moisture & debris trap' }
-          ]
-        },
-        {
-          id:'elc_kit', sys:'Electrical', name:'12V Battery, ABS Speed Sensor & Ignition Coil Kit', oem:p + '-28800-31370', alt:'GS YUASA / AMARON / BOSCH', epc:c.epc + ' Fig. 82-01', price:169.0, task:'bat',
-          subs:[
-            { id:'s_el1', name:'12V EFB / AGM Battery Unit', oem:p + '-28800-31370', qty:'1 unit', price:155.0, spec:'High-heat Start-Stop/Hybrid' },
-            { id:'s_el2', name:'Hall-Effect Wheel Speed ABS Sensor', oem:p + '-89542-06081', qty:'1 pc', price:36.0, spec:'IP69K monsoon-sealed plug' },
-            { id:'s_el3', name:'Positive Multi-Fuse Terminal & 30A Relay', oem:p + '-82620-12280', qty:'1 kit', price:29.0, spec:'120A main fusible link' }
-          ]
-        },
-        {
-          id:'exh_kit', sys:'Exhaust', name:'Catalytic / DPF Pipe, O2 Sensor & Flange Kit', oem:c.exh, alt:'DENSO 234-9090 / BOSAL', epc:c.epc + ' Fig. 17-02', price:228.0, task:'exh',
-          subs:[
-            { id:'s_ex1', name:'Wideband Air-Fuel O2 Sensor', oem:p + '-89467-12100', qty:'1 pc', price:94.0, spec:'Fast 10s zirconia heater' },
-            { id:'s_ex2', name:'Graphite Mesh Donut Gasket + Spring Bolts', oem:p + '-17451-21060', qty:'1 kit', price:19.0, spec:'600°C leak-free flange seal' }
-          ]
-        },
-        {
-          id:'bdy_kit', sys:'Body & Interior', name:'Silicone Wiper Blades, Hood Strut & Trim Clip Kit', oem:p + '-85212-06230', alt:'NWB AERO / STABILUS', epc:c.epc + ' Fig. 85-01', price:32.0, task:'wip',
-          subs:[
-            { id:'s_bd1', name:'Monsoon Aero Silicone Wiper Pair', oem:p + '-85222-52150', qty:'2 pcs', price:26.0, spec:'Hydrophobic streak-free' },
-            { id:'s_bd2', name:'Hood Lift Strut Pair + 20x Bumper Clips', oem:p + '-53440-06180', qty:'1 kit', price:38.0, spec:'380N gas springs + nylon pins' }
-          ]
-        }
-      ];
-      items.forEach(item => {
-        const subText = item.subs.map(s => `${s.name} ${s.oem} ${s.spec}`).join(' ');
-        item._blob = `${item.name} ${item.oem} ${item.alt} ${item.sys} ${subText}`.toLowerCase();
-      });
-      CATALOG_CACHE.set(cacheKey, items);
-      return items;
     }
 
     const INTERVALS = [
@@ -581,6 +433,12 @@
     ];
 
     function activeVehicle() { return VEHICLES[state.vehicleIdx] || VEHICLES[0]; }
+    function activeVariant(v) {
+      const list = (v && v.variants) || [];
+      if (!list.length) return { label: v.chassis || 'Standard', chassis: v.chassis || 'STD', pt: v.pt || 'PETROL' };
+      if (state.variantIdx < 0 || state.variantIdx >= list.length) state.variantIdx = 0;
+      return list[state.variantIdx];
+    }
 
     function filteredVehiclesByCat() {
       return state.cat === 'ALL' ? VEHICLES : VEHICLES.filter(v => v.cat === state.cat);
@@ -589,7 +447,7 @@
     function renderSelectors() {
       const catEl = document.getElementById('category-chips');
       catEl.innerHTML = CATEGORIES.map(c =>
-        `<button class="chip ${state.cat===c.id?'active':''}" onclick="setCat('${c.id}')">${c.label}</button>`
+        `<button class="chip ${state.cat===c.id?'active':''}" onclick="setCat('${c.id}')">${esc(c.label)}</button>`
       ).join('');
 
       const list = filteredVehiclesByCat();
@@ -597,14 +455,19 @@
       const cur = activeVehicle();
       const selBrand = brands.includes(cur.brand) ? cur.brand : brands[0];
       document.getElementById('sel-brand').innerHTML = brands.map(b =>
-        `<option value="${b}" ${b===selBrand?'selected':''}>${b}</option>`
+        `<option value="${esc(b)}" ${b===selBrand?'selected':''}>${esc(b)}</option>`
       ).join('');
 
       const brandModels = list.filter(v => v.brand === selBrand);
       const selModel = brandModels.some(v => v.model === cur.model) ? cur : brandModels[0];
-      state.vehicleIdx = VEHICLES.indexOf(selModel);
+      const nextVehIdx = VEHICLES.indexOf(selModel);
+      if (nextVehIdx !== state.vehicleIdx) {
+        state.vehicleIdx = nextVehIdx;
+        state.variantIdx = 0;
+        state.page = 0;
+      }
       document.getElementById('sel-model').innerHTML = brandModels.map(m =>
-        `<option value="${m.model}" ${m.model===selModel.model?'selected':''}>${m.model}</option>`
+        `<option value="${esc(m.model)}" ${m.model===selModel.model?'selected':''}>${esc(m.model)}</option>`
       ).join('');
 
       if (!selModel.years.includes(state.year)) state.year = selModel.years[0];
@@ -612,25 +475,33 @@
         `<option value="${y}" ${y===state.year?'selected':''}>${y}</option>`
       ).join('');
 
-      document.getElementById('sel-variant').innerHTML = `<option value="0">${selModel.chassis} (${selModel.pt})</option>`;
-      document.getElementById('active-vehicle-label').textContent = `${state.year} ${selModel.brand} ${selModel.model} • ${selModel.chassis} • ${Number(state.odo).toLocaleString()} km`;
-      document.getElementById('pdf-vehicle-subtitle').textContent = `${state.year} ${selModel.brand} ${selModel.model} (${selModel.chassis}) • Market: Bangladesh`;
+      const variants = selModel.variants || [];
+      if (state.variantIdx >= variants.length) state.variantIdx = 0;
+      document.getElementById('sel-variant').innerHTML = variants.map((vr, idx) =>
+        `<option value="${idx}" ${idx===state.variantIdx?'selected':''}>${esc(vr.label)}</option>`
+      ).join('');
+
+      const vr = activeVariant(selModel);
+      document.getElementById('active-vehicle-label').textContent =
+        `${state.year} ${selModel.brand} ${selModel.model} • ${vr.chassis} (${vr.pt}) • ${Number(state.odo).toLocaleString()} km`;
+      document.getElementById('pdf-vehicle-subtitle').textContent =
+        `${state.year} ${selModel.brand} ${selModel.model} (${vr.chassis}) • Market: Bangladesh`;
     }
 
-    function setCat(cat) { state.cat = cat; renderSelectors(); renderAll(); }
+    function setCat(cat) { state.cat = cat; state.page = 0; renderSelectors(); renderAll(); }
     function onBrandChange(b) {
       const match = filteredVehiclesByCat().find(v => v.brand === b);
-      if (match) state.vehicleIdx = VEHICLES.indexOf(match);
+      if (match) { state.vehicleIdx = VEHICLES.indexOf(match); state.variantIdx = 0; state.page = 0; }
       renderSelectors(); renderAll();
     }
     function onModelChange(m) {
       const b = document.getElementById('sel-brand').value;
       const match = VEHICLES.find(v => v.brand === b && v.model === m);
-      if (match) state.vehicleIdx = VEHICLES.indexOf(match);
+      if (match) { state.vehicleIdx = VEHICLES.indexOf(match); state.variantIdx = 0; state.page = 0; }
       renderSelectors(); renderAll();
     }
     function onYearChange(y) { state.year = Number(y); renderSelectors(); }
-    function onVariantChange() { renderAll(); }
+    function onVariantChange(idx) { state.variantIdx = Number(idx) || 0; state.page = 0; renderSelectors(); renderAll(); }
     function onOdoChange(val) { state.odo = Math.max(0, Number(val) || 0); renderSelectors(); renderSchedule(); }
 
     function onVinSearch(q) {
@@ -639,78 +510,173 @@
       if (clean.length < 2) { box.style.display = 'none'; return; }
       const wmiMap = { JTD:'Toyota', JTE:'Toyota', JTM:'Toyota', JHM:'Honda', JN1:'Nissan', JA3:'Mitsubishi', KMH:'Hyundai', KNA:'Kia', MAT:'Tata', MB1:'Ashok Leyland', JHH:'Hino' };
       const wmiBrand = wmiMap[clean.slice(0,3)];
-      const hits = VEHICLES.map((v, idx) => ({ v, idx })).filter(({ v }) =>
-        v.chassis.toUpperCase().includes(clean.split('-')[0]) ||
-        v.model.toUpperCase().includes(clean) ||
-        v.brand.toUpperCase().includes(clean) ||
-        (wmiBrand && v.brand.toUpperCase().includes(wmiBrand.toUpperCase()))
-      ).slice(0, 6);
+      const hits = [];
+      VEHICLES.forEach((v, idx) => {
+        const variants = v.variants || [];
+        variants.forEach((vr, vIdx) => {
+          const hay = `${v.brand} ${v.model} ${vr.chassis} ${vr.label}`.toUpperCase();
+          if (hay.includes(clean) || (wmiBrand && v.brand.toUpperCase().includes(wmiBrand.toUpperCase()))) {
+            hits.push({ v, idx, vr, vIdx });
+          }
+        });
+      });
       if (!hits.length) { box.style.display = 'none'; return; }
-      box.innerHTML = hits.map(({ v, idx }) => `
-        <div class="hit-row" onclick="pickVin(${idx})">
+      box.innerHTML = hits.slice(0, 8).map(({ v, idx, vr, vIdx }) => `
+        <div class="hit-row" onclick="pickVin(${idx}, ${vIdx})">
           <div>
-            <strong>${v.brand} ${v.model}</strong>
-            <div class="muted">${v.chassis} • ${v.pt}</div>
+            <strong>${esc(v.brand)} ${esc(v.model)}</strong>
+            <div class="muted">${esc(vr.label)} • ${esc(vr.pt)}</div>
           </div>
-          <span class="pill">${v.cat}</span>
+          <span class="pill">${esc(vr.chassis)}</span>
         </div>
       `).join('');
       box.style.display = 'block';
     }
 
-    function pickVin(idx) {
+    function pickVin(idx, vIdx) {
       state.cat = 'ALL';
       state.vehicleIdx = idx;
+      state.variantIdx = vIdx || 0;
+      state.page = 0;
       document.getElementById('vin-search').value = '';
       document.getElementById('vin-hits').style.display = 'none';
       const v = activeVehicle();
-      addHistory(`Selected ${state.year} ${v.brand} ${v.model} (${v.chassis})`);
+      const vr = activeVariant(v);
+      addHistory(`Selected ${state.year} ${v.brand} ${v.model} (${vr.chassis})`);
       renderSelectors(); renderAll();
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      state.page = 0;
+      document.getElementById('mode-assemblies').classList.toggle('active', mode === 'assemblies');
+      document.getElementById('mode-all').classList.toggle('active', mode === 'all');
+      renderParts();
+    }
+
+    function setPage(p) {
+      state.page = Math.max(0, p);
+      renderParts();
+      window.scrollTo({ top: 180, behavior: 'smooth' });
     }
 
     function renderParts() {
       const v = activeVehicle();
-      const parts = buildCatalog(v);
+      const bundle = buildFullCatalog(v, state.variantIdx);
+      const parts = bundle.assemblies;
+      const flat = bundle.flatParts;
+
       const chipsEl = document.getElementById('system-chips');
-      chipsEl.innerHTML = `<button class="chip ${state.sys==='ALL'?'active':''}" onclick="setSys('ALL')">All 12 Systems (${parts.length})</button>` +
-        SYSTEMS.map(s => `<button class="chip ${state.sys===s?'active':''}" onclick="setSys('${s}')">${s}</button>`).join('');
+      chipsEl.innerHTML = `<button class="chip ${state.sys==='ALL'?'active':''}" onclick="setSys('ALL')">All 12 Systems (${flat.length.toLocaleString()} Parts)</button>` +
+        SYSTEMS.map(s => `<button class="chip ${state.sys===s?'active':''}" onclick="setSys('${esc(s)}')">${esc(s)}</button>`).join('');
 
       const q = state.query.trim().toLowerCase();
-      const filtered = parts.filter(p => {
-        if (state.sys !== 'ALL' && p.sys !== state.sys) return false;
-        if (!q) return true;
-        return p._blob.includes(q);
-      });
-      document.getElementById('parts-counter').textContent = `${filtered.length} assemblies`;
+      const sysLabel = state.sys === 'ALL' ? 'All 12 Vehicle Systems' : state.sys;
+      document.getElementById('epc-banner-slot').innerHTML = `
+        <div class="epc-banner">
+          <div>${esc(v.brand)} ${esc(v.model)} (${esc(bundle.chassis)}) — ${esc(sysLabel)}</div>
+          <div class="epc-banner-sub">${esc(bundle.epcTitle)} • ${parts.length} Assemblies / ${flat.length.toLocaleString()} Total Parts</div>
+        </div>
+      `;
 
-      document.getElementById('parts-grid').innerHTML = filtered.map(p => {
+      const showFlatPlate = state.viewMode === 'all' || q.length > 0;
+      const gridEl = document.getElementById('parts-grid');
+      const pagerEl = document.getElementById('parts-pager');
+
+      if (showFlatPlate) {
+        const filteredFlat = flat.filter(item => {
+          if (state.sys !== 'ALL' && item.sys !== state.sys) return false;
+          if (!q) return true;
+          return item._blob.includes(q);
+        });
+        const pageSize = 48;
+        const totalPages = Math.max(1, Math.ceil(filteredFlat.length / pageSize));
+        if (state.page >= totalPages) state.page = totalPages - 1;
+        const start = state.page * pageSize;
+        const slice = filteredFlat.slice(start, start + pageSize);
+
+        document.getElementById('parts-counter').textContent =
+          `${filteredFlat.length.toLocaleString()} illustrated parts`;
+
+        gridEl.className = 'epc-plate-grid';
+        gridEl.innerHTML = slice.length ? slice.map(item => `
+          <div class="epc-card">
+            <div class="epc-top">
+              <div class="epc-thumb">${partSvg(item.icon)}</div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                  <span class="epc-num">${item.callout}</span>
+                  <span class="pill ${item.isSub ? '' : 'pill-orange'}">${esc(item.sys)}</span>
+                </div>
+                <div style="font-weight:700; font-size:0.86rem; line-height:1.25;">${esc(item.name)}</div>
+                <div class="muted" style="font-size:0.75rem; margin-top:2px;">${esc(item.spec)} • ${esc(item.qty)}</div>
+              </div>
+            </div>
+            <div class="row" style="margin-top:auto; padding-top:4px; border-top:1px solid rgba(51,65,85,0.6);">
+              <div>
+                <div class="oem-code">${esc(item.oem)}</div>
+                <div class="muted" style="font-size:0.74rem;">$${item.price.toFixed(2)}</div>
+              </div>
+              <button class="btn-outline" style="padding:5px 10px; font-size:0.76rem;" onclick="addPdf('${esc(item.asmId)}', ${item.subId ? `'${esc(item.subId)}'` : 'null'})">+ PDF</button>
+            </div>
+          </div>
+        `).join('') : `<div class="card muted">No matching parts found for "${esc(state.query)}".</div>`;
+
+        pagerEl.innerHTML = totalPages > 1 ? `
+          <button class="btn-outline" ${state.page === 0 ? 'disabled' : ''} onclick="setPage(${state.page - 1})">← Previous 48</button>
+          <span class="muted">Showing ${start + 1}–${Math.min(start + pageSize, filteredFlat.length)} of ${filteredFlat.length.toLocaleString()} parts (Page ${state.page + 1}/${totalPages})</span>
+          <button class="btn-outline" ${state.page >= totalPages - 1 ? 'disabled' : ''} onclick="setPage(${state.page + 1})">Next 48 →</button>
+        ` : '';
+        return;
+      }
+
+      const filtered = parts.filter(p => state.sys === 'ALL' || p.sys === state.sys);
+      const totalInSys = filtered.reduce((acc, p) => acc + 1 + p.subs.length, 0);
+      document.getElementById('parts-counter').textContent = `${filtered.length} assemblies • ${totalInSys.toLocaleString()} parts`;
+      pagerEl.innerHTML = '';
+      gridEl.className = 'grid';
+      gridEl.innerHTML = filtered.map((p, idx) => {
         const open = !!state.expanded[p.id];
         return `
           <div class="card">
-            <div class="row" style="margin-bottom:6px;">
-              <span class="pill pill-orange">${p.sys}</span>
-              <span class="muted">${p.epc}</span>
+            <div class="row" style="margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="epc-num">${idx + 1}</span>
+                <span class="pill pill-orange">${esc(p.sys)}</span>
+              </div>
+              <span class="muted">${esc(p.epc)}</span>
             </div>
-            <div style="font-weight:700; font-size:0.98rem; margin-bottom:6px;">${p.name}</div>
-            <div class="oem-code">Main OEM: ${p.oem}</div>
-            <div class="muted" style="margin:4px 0 8px;">Alt: ${p.alt} • <strong>$${p.price.toFixed(2)}</strong></div>
+            <div class="epc-top" style="margin-bottom:8px;">
+              <div class="epc-thumb">${partSvg(p.icon)}</div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; font-size:0.96rem; margin-bottom:4px;">${esc(p.name)}</div>
+                <div class="oem-code">Main OEM: ${esc(p.oem)}</div>
+                <div class="muted" style="margin-top:2px;">Alt: ${esc(p.alt)} • <strong>$${p.price.toFixed(2)}</strong></div>
+              </div>
+            </div>
             <div class="row">
-              <button class="btn-outline" onclick="toggleExpand('${p.id}')">${open ? 'Hide' : 'Sub-Parts'} (${p.subs.length})</button>
-              <button class="btn" onclick="addPdf('${p.id}', null)">+ Add to PDF</button>
+              <button class="btn-outline" onclick="toggleExpand('${esc(p.id)}')">${open ? 'Hide' : 'Illustrated Sub-Parts'} (${p.subs.length})</button>
+              <button class="btn" onclick="addPdf('${esc(p.id)}', null)">+ Add to PDF</button>
             </div>
             ${open ? `
               <div class="sub-box">
-                <div class="muted" style="color:var(--cyan); font-weight:700; margin-bottom:4px;">Assembly Breakdown (${p.subs.length} Sub-Parts)</div>
-                ${p.subs.map(s => `
-                  <div class="sub-item">
-                    <div>
-                      <div style="font-size:0.84rem; font-weight:600;">${s.name} (${s.qty})</div>
-                      <div class="oem-code">${s.oem} • $${s.price.toFixed(2)}</div>
-                      <div class="muted">${s.spec}</div>
+                <div class="muted" style="color:var(--cyan); font-weight:700; margin-bottom:4px;">Exploded Sub-Parts Plate (${p.subs.length} Items)</div>
+                <div class="epc-sub-grid">
+                  ${p.subs.map((s, sIdx) => `
+                    <div class="epc-sub-card">
+                      <div class="epc-sub-thumb">${partSvg(s.icon)}</div>
+                      <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:5px;">
+                          <span class="epc-num" style="min-width:20px; height:20px; font-size:0.68rem;">${sIdx + 1}</span>
+                          <span style="font-size:0.8rem; font-weight:700; line-height:1.2;">${esc(s.name)}</span>
+                        </div>
+                        <div class="oem-code" style="font-size:0.75rem; margin-top:2px;">${esc(s.oem)} • $${s.price.toFixed(2)}</div>
+                        <div class="muted" style="font-size:0.72rem;">${esc(s.spec)} (${esc(s.qty)})</div>
+                      </div>
+                      <button class="btn-outline" style="padding:4px 8px; font-size:0.72rem;" onclick="addPdf('${esc(p.id)}','${esc(s.id)}')">+ PDF</button>
                     </div>
-                    <button class="btn-outline" onclick="addPdf('${p.id}','${s.id}')">+ PDF</button>
-                  </div>
-                `).join('')}
+                  `).join('')}
+                </div>
               </div>
             ` : ''}
           </div>
@@ -719,9 +685,10 @@
     }
 
     let _searchFrame = 0;
-    function setSys(s) { state.sys = s; renderParts(); }
+    function setSys(s) { state.sys = s; state.page = 0; renderParts(); }
     function onPartSearch(val) {
       state.query = val;
+      state.page = 0;
       if (_searchFrame) cancelAnimationFrame(_searchFrame);
       _searchFrame = requestAnimationFrame(() => {
         _searchFrame = 0;
@@ -774,19 +741,22 @@
     }
 
     function jumpPart(partId) {
-      state.sys = 'ALL'; state.query = ''; state.expanded[partId] = true;
+      state.sys = 'ALL'; state.query = ''; state.viewMode = 'assemblies'; state.expanded[partId] = true;
       document.getElementById('part-search').value = '';
+      document.getElementById('mode-assemblies').classList.add('active');
+      document.getElementById('mode-all').classList.remove('active');
       switchTab('catalog');
     }
 
     function addPdf(partId, subId) {
       const v = activeVehicle();
-      const p = buildCatalog(v).find(x => x.id === partId);
+      const vr = activeVariant(v);
+      const p = buildFullCatalog(v, state.variantIdx).assemblies.find(x => x.id === partId);
       if (!p) return;
       const sub = subId ? p.subs.find(s => s.id === subId) : null;
       const item = sub
-        ? { key:`${v.model}:${p.id}:${sub.id}`, type:'SUB-PART', sys:p.sys, name:sub.name, oem:sub.oem, price:sub.price, veh:`${state.year} ${v.brand} ${v.model}` }
-        : { key:`${v.model}:${p.id}`, type:'ASSEMBLY', sys:p.sys, name:p.name, oem:p.oem, price:p.price, veh:`${state.year} ${v.brand} ${v.model}` };
+        ? { key:`${v.model}:${vr.chassis}:${p.id}:${sub.id}`, type:'SUB-PART', sys:p.sys, name:sub.name, oem:sub.oem, price:sub.price, veh:`${state.year} ${v.brand} ${v.model} (${vr.chassis})` }
+        : { key:`${v.model}:${vr.chassis}:${p.id}`, type:'ASSEMBLY', sys:p.sys, name:p.name, oem:p.oem, price:p.price, veh:`${state.year} ${v.brand} ${v.model} (${vr.chassis})` };
       if (!state.pdfCart.some(x => x.key === item.key)) {
         state.pdfCart.unshift(item);
         localStorage.setItem('eme_pdf_cart', JSON.stringify(state.pdfCart));

@@ -750,7 +750,12 @@ object PartsCatalogEngine {
       ),
     )
 
-    val result = parts.toList()
+    val result = ExpandedCatalogGenerator.enrichAndExpand(
+      baseParts = parts,
+      spec = spec,
+      fitment = fitment,
+      isEv = isEv,
+    )
     catalogCache[cacheKey] = result
     return result
   }

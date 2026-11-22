@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,6 +62,49 @@ fun systemAccentColor(system: CatalogSystem): Color = when (system) {
   CatalogSystem.ELECTRICAL -> Color(0xFF60A5FA)
   CatalogSystem.EXHAUST -> Color(0xFF94A3B8)
   CatalogSystem.BODY_INTERIOR -> OemEmerald
+}
+
+fun inferSubPartVisualKind(name: String, fallback: PartVisualKind): PartVisualKind {
+  val n = name.lowercase()
+  return when {
+    n.contains("filter") || n.contains("strainer") || n.contains("cartridge") || n.contains("element") || n.contains("drier") -> PartVisualKind.FILTER_CANISTER
+    n.contains("o-ring") || n.contains("seal") || n.contains("gasket") || n.contains("washer") || n.contains("shim") || n.contains("circlip") || n.contains("snap ring") || n.contains("collar") -> PartVisualKind.BRAKE_ROTOR
+    n.contains("bolt") || n.contains("nut") || n.contains("stud") || n.contains("pin") || n.contains("plug") || n.contains("injector") || n.contains("coil") -> PartVisualKind.SPARK_IGNITION
+    n.contains("spring") || n.contains("strut") || n.contains("shock") || n.contains("damper") -> PartVisualKind.STRUT_COIL
+    n.contains("bracket") || n.contains("arm") || n.contains("mount") || n.contains("bushing") || n.contains("fork") || n.contains("ball joint") -> PartVisualKind.CONTROL_ARM
+    n.contains("bearing") || n.contains("gear") || n.contains("sprocket") || n.contains("flywheel") || n.contains("pulley") -> PartVisualKind.TRANSMISSION_GEAR
+    n.contains("sensor") || n.contains("switch") || n.contains("relay") || n.contains("solenoid") || n.contains("valve") || n.contains("regulator") || n.contains("servo") -> PartVisualKind.SENSOR_ELECTRONIC
+    n.contains("hose") || n.contains("pipe") || n.contains("tube") || n.contains("muffler") || n.contains("resonator") -> PartVisualKind.EXHAUST_PIPE
+    n.contains("cable") || n.contains("rack") || n.contains("shaft") || n.contains("rod") -> PartVisualKind.STEERING_RACK
+    n.contains("belt") || n.contains("chain") -> PartVisualKind.BELT_TIMING
+    n.contains("pad") || n.contains("shoe") || n.contains("plate") -> PartVisualKind.BRAKE_PAD
+    n.contains("fan") || n.contains("radiator") || n.contains("condenser") || n.contains("evaporator") || n.contains("blower") -> PartVisualKind.HVAC_BLOWER
+    n.contains("fluid") || n.contains("oil") || n.contains("tank") || n.contains("reservoir") -> PartVisualKind.FLUID_BOTTLE
+    n.contains("battery") || n.contains("alternator") -> PartVisualKind.BATTERY_MODULE
+    else -> fallback
+  }
+}
+
+@Composable
+fun EpcCalloutBadge(
+  number: Int,
+  accent: Color = RacingOrange,
+  modifier: Modifier = Modifier,
+) {
+  Box(
+    modifier = modifier
+      .size(24.dp)
+      .clip(CircleShape)
+      .background(Color(0xFF0F172A))
+      .border(1.5.dp, accent, CircleShape),
+    contentAlignment = Alignment.Center,
+  ) {
+    Text(
+      text = number.toString(),
+      style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
+      color = Color.White,
+    )
+  }
 }
 
 @Composable

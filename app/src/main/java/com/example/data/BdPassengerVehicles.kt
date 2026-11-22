@@ -409,10 +409,13 @@ internal object BdPassengerVehicles {
       model = "Land Cruiser Prado",
       category = VehicleCategory.SUVS_CROSSOVERS_4X4,
       marketCodes = listOf("BD", "JDM", "ASEAN", "EDM"),
-      years = (2010..2026).toList().reversed(),
+      years = (1996..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("2.7L 2TR-FE TX-L Petrol 6AT 4WD (TRJ150W)", Powertrain.PETROL, "TRJ150"),
-        VehicleVariantSpec("2.8L 1GD-FTV TZ-G Clean Diesel 6AT/8AT (GDJ150 / GDJ250)", Powertrain.DIESEL, "GDJ150"),
+        VehicleVariantSpec("J250 2.8L 1GD-FTV / 2.4L Turbo Hybrid 4WD (GDJ250 / TJH250)", Powertrain.DIESEL, "GDJ250"),
+        VehicleVariantSpec("J150 2.7L 2TR-FE TX-L Petrol 6AT 4WD (TRJ150W)", Powertrain.PETROL, "TRJ150"),
+        VehicleVariantSpec("J150 2.8L 1GD-FTV / 3.0L 1KD-FTV TZ-G Diesel (GDJ150 / KDJ150)", Powertrain.DIESEL, "GDJ150"),
+        VehicleVariantSpec("J120 2.7L 2TR-FE / 3.0L 1KD-FTV TX/VX (TRJ120W / KDJ120W)", Powertrain.PETROL, "TRJ120"),
+        VehicleVariantSpec("J90 3.0L 1KZ-TE Diesel / 3.4L 5VZ-FE V6 (KZJ95W / VZJ95W)", Powertrain.DIESEL, "KZJ95"),
       ),
     ),
     VehicleModelSpec(
@@ -420,10 +423,13 @@ internal object BdPassengerVehicles {
       model = "Land Cruiser V8 / 300",
       category = VehicleCategory.SUVS_CROSSOVERS_4X4,
       marketCodes = listOf("BD", "JDM", "ASEAN", "USDM"),
-      years = (2012..2026).toList().reversed(),
+      years = (1996..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("4.6L 1UR-FE / 4.5L 1VD-FTV V8 4WD (URJ202 / VDJ200)", Powertrain.PETROL, "URJ202"),
-        VehicleVariantSpec("3.5L V35A-FTS Twin-Turbo / 3.3L F33A-FTV Diesel (VJA300 / FJA300)", Powertrain.DIESEL, "J300"),
+        VehicleVariantSpec("LC300 3.3L F33A-FTV Diesel / 3.5L V35A-FTS Twin-Turbo (FJA300 / VJA300)", Powertrain.DIESEL, "J300"),
+        VehicleVariantSpec("LC200 4.6L 1UR-FE Petrol / 4.5L 1VD-FTV V8 Diesel (URJ202 / VDJ200)", Powertrain.PETROL, "URJ202"),
+        VehicleVariantSpec("LC100 4.7L 2UZ-FE V8 / 4.2L 1HD-FTE Diesel (UZJ100 / HDJ100)", Powertrain.PETROL, "UZJ100"),
+        VehicleVariantSpec("LC80 4.5L 1FZ-FE / 4.2L 1HZ 4WD (FZJ80 / HZJ80)", Powertrain.DIESEL, "HZJ80"),
+        VehicleVariantSpec("LC70 4.2L 1HZ / 4.5L 1VD-FTV Troop Carrier & Pickup (HZJ79 / VDJ79)", Powertrain.DIESEL, "HZJ79"),
       ),
     ),
     VehicleModelSpec(
@@ -534,10 +540,13 @@ internal object BdPassengerVehicles {
       model = "Pajero",
       category = VehicleCategory.SUVS_CROSSOVERS_4X4,
       marketCodes = listOf("BD", "JDM", "ASEAN"),
-      years = (2010..2026).toList().reversed(),
+      years = (2006..2026).toList().reversed(),
       variants = listOf(
-        VehicleVariantSpec("2.4L 4N15 Clean Diesel Pajero Sport 4WD (KS1W)", Powertrain.DIESEL, "KS1W"),
-        VehicleVariantSpec("3.2L 4M41 DI-D / 3.0L V6 Full-Size (V98W / V93W)", Powertrain.DIESEL, "V98W"),
+        VehicleVariantSpec("Pajero V93 — 3.0L V6 6G72 MIVEC LWB 4WD (V93W)", Powertrain.PETROL, "V93W"),
+        VehicleVariantSpec("Pajero V94 — 2.5L 4D56 / 2.8L 4M40 Intercooler Turbo (V94W)", Powertrain.DIESEL, "V94W"),
+        VehicleVariantSpec("Pajero V96 — 3.5L V6 6G74 MIVEC Exceed 4WD (V96W)", Powertrain.PETROL, "V96W"),
+        VehicleVariantSpec("Pajero V98 — 3.2L 4M41 DI-D Common-Rail Diesel 4WD (V98W)", Powertrain.DIESEL, "V98W"),
+        VehicleVariantSpec("Pajero Sport — 2.4L 4N15 Clean Diesel 8AT 4WD (KS1W)", Powertrain.DIESEL, "KS1W"),
       ),
     ),
     VehicleModelSpec(
@@ -692,6 +701,16 @@ internal object BdPassengerVehicles {
       years = (2021..2026).toList().reversed(),
       variants = listOf(
         VehicleVariantSpec("1.5L GW4G15K Turbo 7DCT / 1.5L DHT Hybrid", Powertrain.HYBRID, "A01"),
+      ),
+    ),
+    VehicleModelSpec(
+      brand = "Tata",
+      model = "Hexa",
+      category = VehicleCategory.SUVS_CROSSOVERS_4X4,
+      marketCodes = listOf("BD", "IND"),
+      years = (2017..2025).toList().reversed(),
+      variants = listOf(
+        VehicleVariantSpec("2.2L Varicor 400 Diesel 6AT / 6MT AWD (XT / XTA / XE)", Powertrain.DIESEL, "HEXA-XTA"),
       ),
     ),
   )

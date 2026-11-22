@@ -134,6 +134,7 @@ object BrandOemProfiles {
 
       b.contains("mitsubishi") -> {
         val isCanter = m.contains("canter") || m.contains("l200")
+        val isPajero = m.contains("pajero")
         BrandOemSpec(
           oemBrand = "Mitsubishi Motors / Fuso Genuine",
           epcCatalogName = "Mitsubishi ASA / Fuso EPC",
@@ -141,25 +142,27 @@ object BrandOemProfiles {
           oilVisc = if (powertrain == Powertrain.DIESEL) "15W-40 / 5W-30 ACEA C3" else "0W-20 / 5W-30 API SP",
           oilFilterCode = when {
             m.contains("canter") -> "ME013307"
+            isPajero && powertrain == Powertrain.DIESEL -> "ME013307 / 1230A182"
+            isPajero -> "MD352627"
             powertrain == Powertrain.DIESEL -> "1230A182"
             else -> "MZ690070"
           },
           airFilterCode = when {
             m.contains("canter") -> "ME422778"
-            m.contains("pajero") -> "1500A608"
+            isPajero -> "1500A608 / MR571476"
             else -> "1500A513"
           },
           fuelFilterCode = if (powertrain == Powertrain.DIESEL) "1770A233" else "1770A260",
-          cabinFilterCode = "7803A043",
+          cabinFilterCode = if (isPajero) "7803A028" else "7803A043",
           sparkCode = if (powertrain == Powertrain.DIESEL) "ME203539" else "1822A086",
-          clutchKitCode = if (isCanter) "ME521104" else "2304A075",
-          steeringRackCode = if (isCanter) "MK383850" else "4410A453",
-          radiatorCode = if (isCanter) "ME403638" else "1350A297",
-          acCompressorCode = "7813A618",
+          clutchKitCode = if (isCanter || isPajero) "ME521104" else "2304A075",
+          steeringRackCode = if (isCanter) "MK383850" else if (isPajero) "4410A323" else "4410A453",
+          radiatorCode = if (isCanter) "ME403638" else if (isPajero) "1350A141" else "1350A297",
+          acCompressorCode = if (isPajero) "7813A405" else "7813A618",
           exhaustCatCode = "1570C312",
-          padCode = if (m.contains("pajero") || isCanter) "4605A879" else "4605B005",
-          rotorCode = "4615A178",
-          batterySpec = if (m.contains("pajero") || isCanter) "95D31L / N100 Heavy-Duty" else "75D23L / 85D26L 12V",
+          padCode = if (isPajero || isCanter) "4605A879" else "4605B005",
+          rotorCode = if (isPajero) "4615A035" else "4615A178",
+          batterySpec = if (isPajero || isCanter) "95D31L / N100 Heavy-Duty" else "75D23L / 85D26L 12V",
         )
       }
 
