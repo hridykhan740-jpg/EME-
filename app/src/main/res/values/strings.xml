@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">AutoPulse</string>
+    <string name="tagline">Vehicle Parts &amp; Predictive Maintenance</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="sign_out">Sign out</string>
+    <string name="nav_maintenance">Maintenance</string>
+    <string name="nav_catalog">Parts Catalog</string>
+    <string name="nav_garage">Garage</string>
+    <string name="vehicle_setup_title">Configure Your Vehicle</string>
+    <string name="search_parts_hint">Search part name, OEM #, or brand…</string>
+    <string name="log_service_action">Log Service</string>
+    <string name="view_parts_action">View Parts</string>
+</resources>

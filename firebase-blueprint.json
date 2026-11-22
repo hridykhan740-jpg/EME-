@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user profile and active garage preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the profile owner." },
+        "displayName": { "type": "string", "description": "User display name." },
+        "email": { "type": "string", "description": "Verified email address from Google Sign-In." },
+        "activeVehicleId": { "type": "string", "description": "Currently selected vehicle document ID." },
+        "distanceUnit": { "type": "string", "enum": ["KM", "MI"], "description": "Preferred distance display unit." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp (FieldValue.serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": ["userId", "displayName", "distanceUnit", "createdAt", "updatedAt"]
+    },
+    "UserVehicle": {
+      "title": "UserVehicle",
+      "description": "Vehicle registered in a user's garage with global/Asian market specification.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "country": { "type": "string", "description": "Target market country or region name." },
+        "marketCode": { "type": "string", "description": "Market spec code (e.g., BD, JDM, KDM, IND, ASEAN, USDM, EDM)." },
+        "brand": { "type": "string", "description": "Vehicle manufacturer." },
+        "model": { "type": "string", "description": "Vehicle model name." },
+        "year": { "type": "integer", "description": "Model year." },
+        "variant": { "type": "string", "description": "Engine, powertrain, and trim variant." },
+        "powertrain": { "type": "string", "enum": ["PETROL", "DIESEL", "HYBRID", "EV"], "description": "Powertrain classification." },
+        "odometerKm": { "type": "integer", "description": "Current odometer reading in km." },
+        "nickname": { "type": "string", "description": "Optional user nickname." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["userId", "country", "marketCode", "brand", "model", "year", "variant", "powertrain", "odometerKm", "createdAt", "updatedAt"]
+    },
+    "MaintenanceLog": {
+      "title": "MaintenanceLog",
+      "description": "Completed maintenance service record for a user vehicle.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "vehicleId": { "type": "string", "description": "Associated UserVehicle document ID." },
+        "taskKey": { "type": "string", "description": "Stable predictive maintenance interval key." },
+        "taskTitle": { "type": "string", "description": "Human-readable maintenance task title." },
+        "serviceKm": { "type": "integer", "description": "Odometer in km when service was performed." },
+        "serviceEpochMs": { "type": "integer", "description": "Epoch milliseconds when service was performed." },
+        "partOemNumber": { "type": "string", "description": "Optional OEM part number used." },
+        "notes": { "type": "string", "description": "Optional service notes." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["userId", "vehicleId", "taskKey", "taskTitle", "serviceKm", "serviceEpochMs", "createdAt", "updatedAt"]
+    },
+    "SavedPart": {
+      "title": "SavedPart",
+      "description": "Bookmarked catalog part for quick ordering or maintenance reference.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "partId": { "type": "string", "description": "Catalog part identifier." },
+        "oemNumber": { "type": "string", "description": "Verified OEM part number." },
+        "partName": { "type": "string", "description": "Verified part name." },
+        "systemName": { "type": "string", "description": "Catalog system category." },
+        "vehicleSummary": { "type": "string", "description": "Vehicle fitment summary label." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["userId", "partId", "oemNumber", "partName", "systemName", "vehicleSummary", "createdAt", "updatedAt"]
+    },
+    "AdminUserLog": {
+      "title": "AdminUserLog",
+      "description": "Audit log of authenticated users readable strictly by Super-Admin mhossenali740@gmail.com.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the logged-in user." },
+        "displayName": { "type": "string", "description": "Google account display name." },
+        "email": { "type": "string", "description": "Google account Gmail address." },
+        "photoUrl": { "type": "string", "description": "Optional Google profile photo URL." },
+        "lastLoginEpochMs": { "type": "integer", "description": "Timestamp in epoch ms of most recent sign-in." },
+        "loginCount": { "type": "integer", "description": "Cumulative recorded sign-in count." },
+        "selectedVehiclesSummary": { "type": "string", "description": "Summary of vehicles selected by the user." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["userId", "displayName", "email", "lastLoginEpochMs", "loginCount", "selectedVehiclesSummary", "createdAt", "updatedAt"]
+    },
+    "LoginAlert": {
+      "title": "LoginAlert",
+      "description": "Login notification event triggered on user authentication for Super-Admin review and email dispatch.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user who signed in." },
+        "displayName": { "type": "string", "description": "Display name of the user." },
+        "email": { "type": "string", "description": "Email address of the user." },
+        "targetAdminEmail": { "type": "string", "description": "Recipient admin email (mhossenali740@gmail.com)." },
+        "deliveryChannel": { "type": "string", "description": "Alert delivery status/channel." },
+        "loginEpochMs": { "type": "integer", "description": "Login epoch ms." },
+        "acknowledged": { "type": "boolean", "description": "Whether the super-admin reviewed the alert." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["userId", "displayName", "email", "targetAdminEmail", "deliveryChannel", "loginEpochMs", "acknowledged", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and active garage preferences."
+    },
+    "/users/{userId}/vehicles/{vehicleId}": {
+      "schema": { "$ref": "#/entities/UserVehicle" },
+      "description": "User's saved global and Asian market vehicles."
+    },
+    "/users/{userId}/maintenanceLogs/{logId}": {
+      "schema": { "$ref": "#/entities/MaintenanceLog" },
+      "description": "Completed maintenance service history per user."
+    },
+    "/users/{userId}/savedParts/{savedPartId}": {
+      "schema": { "$ref": "#/entities/SavedPart" },
+      "description": "Bookmarked parts watchlist per user."
+    },
+    "/adminUserLogs/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUserLog" },
+      "description": "User login telemetry readable only by Super-Admin mhossenali740@gmail.com."
+    },
+    "/loginAlerts/{alertId}": {
+      "schema": { "$ref": "#/entities/LoginAlert" },
+      "description": "Automated login notification events readable only by Super-Admin mhossenali740@gmail.com."
+    }
+  }
+}

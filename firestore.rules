@@ -1,0 +1,235 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Strict Super-Admin check: verified Gmail token matching mhossenali740@gmail.com (case-insensitive)
+    function isSuperAdmin() {
+      return isSignedIn() &&
+             request.auth.token.email_verified == true &&
+             request.auth.token.email is string &&
+             request.auth.token.email.lower() == 'mhossenali740@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.distanceUnit in ['KM', 'MI'] &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 120)) &&
+             (!('activeVehicleId' in data) || (data.activeVehicleId is string && data.activeVehicleId.size() <= 128)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidUserVehicle(data, userId) {
+      return data.userId == userId &&
+             data.country is string && data.country.size() >= 1 && data.country.size() <= 60 &&
+             data.marketCode is string && data.marketCode.size() >= 1 && data.marketCode.size() <= 20 &&
+             data.brand is string && data.brand.size() >= 1 && data.brand.size() <= 60 &&
+             data.model is string && data.model.size() >= 1 && data.model.size() <= 80 &&
+             data.year is int && data.year >= 1980 && data.year <= 2030 &&
+             data.variant is string && data.variant.size() >= 1 && data.variant.size() <= 120 &&
+             data.powertrain in ['PETROL', 'DIESEL', 'HYBRID', 'EV'] &&
+             data.odometerKm is int && data.odometerKm >= 0 && data.odometerKm <= 2000000 &&
+             (!('nickname' in data) || (data.nickname is string && data.nickname.size() <= 60)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidMaintenanceLog(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.vehicleId) &&
+             data.taskKey is string && data.taskKey.size() >= 1 && data.taskKey.size() <= 80 &&
+             data.taskTitle is string && data.taskTitle.size() >= 1 && data.taskTitle.size() <= 120 &&
+             data.serviceKm is int && data.serviceKm >= 0 && data.serviceKm <= 2000000 &&
+             data.serviceEpochMs is int && data.serviceEpochMs >= 0 &&
+             (!('partOemNumber' in data) || (data.partOemNumber is string && data.partOemNumber.size() <= 60)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 300)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidSavedPart(data, userId) {
+      return data.userId == userId &&
+             isValidId(data.partId) &&
+             data.oemNumber is string && data.oemNumber.size() >= 1 && data.oemNumber.size() <= 60 &&
+             data.partName is string && data.partName.size() >= 1 && data.partName.size() <= 120 &&
+             data.systemName is string && data.systemName.size() >= 1 && data.systemName.size() <= 40 &&
+             data.vehicleSummary is string && data.vehicleSummary.size() >= 1 && data.vehicleSummary.size() <= 140 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidAdminUserLog(data, userId) {
+      return data.userId == userId &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.email is string && data.email.size() >= 1 && data.email.size() <= 120 &&
+             (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+             data.lastLoginEpochMs is int && data.lastLoginEpochMs >= 0 &&
+             data.loginCount is int && data.loginCount >= 1 && data.loginCount <= 1000000 &&
+             data.selectedVehiclesSummary is string && data.selectedVehiclesSummary.size() >= 1 && data.selectedVehiclesSummary.size() <= 300 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidLoginAlert(data) {
+      return isValidId(data.userId) &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.email is string && data.email.size() >= 1 && data.email.size() <= 120 &&
+             data.targetAdminEmail == 'mhossenali740@gmail.com' &&
+             data.deliveryChannel is string && data.deliveryChannel.size() >= 1 && data.deliveryChannel.size() <= 80 &&
+             data.loginEpochMs is int && data.loginEpochMs >= 0 &&
+             data.acknowledged is bool &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'distanceUnit', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'activeVehicleId', 'distanceUnit', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'activeVehicleId', 'distanceUnit', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /vehicles/{vehicleId} {
+        allow get: if isOwner(userId) && isValidId(vehicleId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(vehicleId) &&
+                         incoming().keys().hasAll(['userId', 'country', 'marketCode', 'brand', 'model', 'year', 'variant', 'powertrain', 'odometerKm', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'country', 'marketCode', 'brand', 'model', 'year', 'variant', 'powertrain', 'odometerKm', 'nickname', 'createdAt', 'updatedAt']) &&
+                         isValidUserVehicle(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(vehicleId) &&
+                         isValidUserVehicle(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['odometerKm', 'nickname', 'variant', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(vehicleId);
+      }
+
+      match /maintenanceLogs/{logId} {
+        allow get: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(logId) &&
+                         incoming().keys().hasAll(['userId', 'vehicleId', 'taskKey', 'taskTitle', 'serviceKm', 'serviceEpochMs', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'vehicleId', 'taskKey', 'taskTitle', 'serviceKm', 'serviceEpochMs', 'partOemNumber', 'notes', 'createdAt', 'updatedAt']) &&
+                         exists(/databases/$(database)/documents/users/$(userId)/vehicles/$(incoming().vehicleId)) &&
+                         isValidMaintenanceLog(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(logId) &&
+                         isValidMaintenanceLog(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().vehicleId == existing().vehicleId &&
+                         incoming().taskKey == existing().taskKey &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['serviceKm', 'serviceEpochMs', 'partOemNumber', 'notes', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+
+      match /savedParts/{savedPartId} {
+        allow get: if isOwner(userId) && isValidId(savedPartId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(savedPartId) &&
+                         incoming().keys().hasAll(['userId', 'partId', 'oemNumber', 'partName', 'systemName', 'vehicleSummary', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'partId', 'oemNumber', 'partName', 'systemName', 'vehicleSummary', 'createdAt', 'updatedAt']) &&
+                         isValidSavedPart(incoming(), userId);
+
+        allow update: if false;
+
+        allow delete: if isOwner(userId) && isValidId(savedPartId);
+      }
+    }
+
+    // Super-Admin User Logs: users can only upsert their own login record; ONLY verified mhossenali740@gmail.com can list/read all users
+    match /adminUserLogs/{userId} {
+      allow get: if (isOwner(userId) && isValidId(userId)) || isSuperAdmin();
+      allow list: if isSuperAdmin();
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'email', 'lastLoginEpochMs', 'loginCount', 'selectedVehiclesSummary', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'photoUrl', 'lastLoginEpochMs', 'loginCount', 'selectedVehiclesSummary', 'createdAt', 'updatedAt']) &&
+                       isValidAdminUserLog(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidAdminUserLog(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'photoUrl', 'lastLoginEpochMs', 'loginCount', 'selectedVehiclesSummary', 'updatedAt']);
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // Automated Login Alert Events: signed-in user creates their own event; ONLY verified mhossenali740@gmail.com reads/acknowledges
+    match /loginAlerts/{alertId} {
+      allow get, list: if isSuperAdmin();
+
+      allow create: if isSignedIn() &&
+                       isValidId(alertId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().acknowledged == false &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'email', 'targetAdminEmail', 'deliveryChannel', 'loginEpochMs', 'acknowledged', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'targetAdminEmail', 'deliveryChannel', 'loginEpochMs', 'acknowledged', 'createdAt', 'updatedAt']) &&
+                       isValidLoginAlert(incoming());
+
+      allow update: if isSuperAdmin() &&
+                       isValidId(alertId) &&
+                       isValidLoginAlert(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['acknowledged', 'updatedAt']);
+
+      allow delete: if isSuperAdmin();
+    }
+  }
+}
